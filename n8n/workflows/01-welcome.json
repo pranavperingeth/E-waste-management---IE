@@ -1,0 +1,120 @@
+{
+  "name": "01-welcome",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "registered",
+        "responseMode": "immediately",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook - Registration",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "registered"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-secret",
+              "leftValue": "={{ $json.headers['x-internal-secret'] }}",
+              "rightValue": "change_me_shared_with_n8n",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-secret-1",
+      "name": "IF Secret Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "fields": {
+          "values": [
+            {
+              "name": "number",
+              "value": "={{ $json.body.whatsapp_number }}"
+            },
+            {
+              "name": "text",
+              "value": "=Hi {{ $json.body.full_name }}! 👋 Welcome to the Smart E-Waste Portal.\n\nType *BOOK* to schedule an e-waste pickup\nType *STATUS* to see your bookings\nType *HELP* for all commands"
+            }
+          ]
+        }
+      },
+      "id": "exec-send-1",
+      "name": "Send Welcome Message",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [720, 240]
+    },
+    {
+      "parameters": {},
+      "id": "noop-1",
+      "name": "Stop - Invalid Secret",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [720, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - Registration": {
+      "main": [
+        [
+          {
+            "node": "IF Secret Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Secret Valid": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop - Invalid Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "pinData": {}
+}
