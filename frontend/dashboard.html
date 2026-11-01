@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — E-Waste Portal</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>♻️ E-Waste Portal</h1>
+    <div>
+      <a href="/">Home</a>
+      <a href="#" onclick="logout()">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Dashboard content -->
+  <div class="card wide">
+    <h2>Welcome, <span id="userName">...</span></h2>
+    <p id="userPhone"></p>
+
+    <!-- WhatsApp bot instructions -->
+    <div class="info-box">
+      <strong>📱 To book a pickup:</strong> Message our WhatsApp bot and type
+      <strong>BOOK</strong>. The bot will guide you through choosing your
+      e-waste category, quantity, address, and pickup date.
+    </div>
+
+    <!-- Bookings table -->
+    <h3 style="margin-bottom: 0.5rem;">Your Bookings</h3>
+    <div id="bookingsMsg"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ref</th>
+            <th>Category</th>
+            <th>Qty</th>
+            <th>Pickup Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="bookingsBody">
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+    </div>
+    <p id="noBookings" style="display:none; color: var(--text-light); margin-top: 1rem;">
+      No bookings yet. Message the WhatsApp bot and type <strong>BOOK</strong> to get started!
+    </p>
+  </div>
+
+  <div class="footer">
+    Smart E-Waste Management Portal &mdash; Prototype
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    // ---------------------------------------------------------------
+    // Dashboard page logic:
+    //   1. Auth guard — redirect to login if no JWT in localStorage.
+    //   2. Fetch GET /api/me to display the user's name and phone.
+    //   3. Fetch GET /api/my-bookings to populate the bookings table.
+    //      Each row shows: reference code, category, quantity,
+    //      pickup date, and a colored status badge.
+    //   4. If the token is invalid/expired (401), clear it and
+    //      redirect to login.
+    // ---------------------------------------------------------------
+
+    // Auth guard — redirect if not logged in
+    if (!requireAuth()) {
+      // requireAuth() already redirects, but stop script execution
+    } else {
+      loadDashboard();
+    }
+
+    async function loadDashboard() {
+      try {
+        // Fetch user profile
+        const user = await apiFetch("/me");
+        document.getElementById("userName").textContent = user.full_name;
+        document.getElementById("userPhone").textContent =
+          "WhatsApp: +" + user.whatsapp_number;
+
+        // Fetch bookings
+        const bookings = await apiFetch("/my-bookings");
+        const tbody = document.getElementById("bookingsBody");
+        const noBookings = document.getElementById("noBookings");
+
+        if (bookings.length === 0) {
+          noBookings.style.display = "block";
+        } else {
+          noBookings.style.display = "none";
+          tbody.innerHTML = bookings
+            .map(
+              (b) => `
+            <tr>
+              <td><strong>${escapeHtml(b.booking_ref)}</strong></td>
+              <td>${escapeHtml(b.item_category)}</td>
+              <td>${b.quantity}</td>
+              <td>${new Date(b.pickup_date).toLocaleDateString("en-IN")}</td>
+              <td><span class="status status-${b.status.toLowerCase()}">${escapeHtml(b.status)}</span></td>
+            </tr>
+          `
+            )
+            .join("");
+        }
+      } catch (err) {
+        // If 401, token is invalid — redirect to login
+        if (err.message.includes("401") || err.message.includes("token")) {
+          clearToken();
+          window.location.href = "/login.html";
+          return;
+        }
+        showMessage("bookingsMsg", err.message, "error");
+      }
+    }
+  </script>
+</body>
+</html>

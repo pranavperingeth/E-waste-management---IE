@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — E-Waste Portal</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>♻️ E-Waste Portal</h1>
+    <div>
+      <a href="/">Home</a>
+      <a href="/register.html">Register</a>
+    </div>
+  </nav>
+
+  <!-- Login form -->
+  <div class="card">
+    <h2>Login</h2>
+    <p>Sign in to view your dashboard and bookings.</p>
+
+    <div id="msg"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required placeholder="you@example.com" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="Your password" />
+      </div>
+
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+  </div>
+
+  <div class="footer">
+    Smart E-Waste Management Portal &mdash; Prototype
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    // ---------------------------------------------------------------
+    // Login page logic:
+    //   1. On form submit, POST to /api/login with email + password.
+    //   2. On success, store the JWT in localStorage and redirect
+    //      to the dashboard.
+    //   3. On error (401 wrong creds, 429 rate limit), show the
+    //      error message.
+    // ---------------------------------------------------------------
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMessage("msg");
+
+      const body = {
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+      };
+
+      try {
+        const data = await apiFetch("/login", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        setToken(data.token);
+        window.location.href = "/dashboard.html";
+      } catch (err) {
+        showMessage("msg", err.message, "error");
+      }
+    });
+  </script>
+</body>
+</html>

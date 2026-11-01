@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — E-Waste Portal</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>♻️ E-Waste Portal</h1>
+    <div>
+      <a href="/">Home</a>
+      <a href="/login.html">Login</a>
+    </div>
+  </nav>
+
+  <!-- Registration form -->
+  <div class="card">
+    <h2>Create Account</h2>
+    <p>Register to start using our WhatsApp bot for e-waste pickups.</p>
+
+    <div id="msg"></div>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" required placeholder="Your full name" />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required placeholder="you@example.com" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required minlength="8" placeholder="At least 8 characters" />
+      </div>
+
+      <div class="form-group">
+        <label for="whatsapp_number">WhatsApp Number</label>
+        <input type="tel" id="whatsapp_number" required placeholder="+91 98765 43210" />
+        <div class="hint">Include country code, e.g. +91 for India</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+  </div>
+
+  <div class="footer">
+    Smart E-Waste Management Portal &mdash; Prototype
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    // ---------------------------------------------------------------
+    // Registration page logic:
+    //   1. On form submit, POST to /api/register with the 4 fields.
+    //   2. On success (201), show a green message telling the user
+    //      to check WhatsApp for the welcome message.
+    //   3. On error (400 validation, 409 duplicate, 429 rate limit),
+    //      show the server's error message in red.
+    // ---------------------------------------------------------------
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMessage("msg");
+
+      const body = {
+        full_name: document.getElementById("full_name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+        whatsapp_number: document.getElementById("whatsapp_number").value.trim(),
+      };
+
+      try {
+        const data = await apiFetch("/register", {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        showMessage("msg", data.message, "success");
+        document.getElementById("registerForm").reset();
+      } catch (err) {
+        showMessage("msg", err.message, "error");
+      }
+    });
+  </script>
+</body>
+</html>
