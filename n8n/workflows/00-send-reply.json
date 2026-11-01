@@ -34,9 +34,12 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"number\": \"{{ $json.number }}\",\n  \"text\": \"{{ $json.text }}\",\n  \"delay\": 1500\n}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({ number: $json.number, text: $json.text, delay: 1500 }) }}",
+        "options": {
+          "timeout": 8000
+        }
       },
+      "onError": "continueRegularOutput",
       "id": "http-send-1",
       "name": "Send WhatsApp Message",
       "type": "n8n-nodes-base.httpRequest",
