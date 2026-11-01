@@ -2,12 +2,29 @@
   "name": "00-send-reply",
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "number",
+              "type": "string"
+            },
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ]
+        }
+      },
       "id": "trigger-1",
       "name": "Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ]
     },
     {
       "parameters": {
@@ -24,7 +41,10 @@
       "name": "Send WhatsApp Message",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [480, 300],
+      "position": [
+        480,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",

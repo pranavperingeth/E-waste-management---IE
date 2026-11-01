@@ -12,7 +12,10 @@
       "name": "Webhook - Registration",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "registered"
     },
     {
@@ -42,33 +45,59 @@
       "name": "IF Secret Valid",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
           "mode": "list",
-          "value": ""
+          "value": "",
+          "cachedResultName": "00-send-reply"
         },
-        "fields": {
-          "values": [
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "number": "={{ $json.body.whatsapp_number }}",
+            "text": "=Hi {{ $json.body.full_name }}! 👋 Welcome to the Smart E-Waste Portal.\n\nType *BOOK* to schedule an e-waste pickup\nType *STATUS* to see your bookings\nType *HELP* for all commands"
+          },
+          "matchingColumns": [],
+          "schema": [
             {
-              "name": "number",
-              "value": "={{ $json.body.whatsapp_number }}"
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
             },
             {
-              "name": "text",
-              "value": "=Hi {{ $json.body.full_name }}! 👋 Welcome to the Smart E-Waste Portal.\n\nType *BOOK* to schedule an e-waste pickup\nType *STATUS* to see your bookings\nType *HELP* for all commands"
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
             }
-          ]
-        }
+          ],
+          "attemptToConvertTypes": false
+        },
+        "mode": "once",
+        "options": {}
       },
       "id": "exec-send-1",
       "name": "Send Welcome Message",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [720, 240]
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        240
+      ]
     },
     {
       "parameters": {},
@@ -76,7 +105,10 @@
       "name": "Stop - Invalid Secret",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [720, 400]
+      "position": [
+        720,
+        400
+      ]
     }
   ],
   "connections": {

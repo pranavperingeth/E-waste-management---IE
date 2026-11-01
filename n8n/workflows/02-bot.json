@@ -12,23 +12,29 @@
       "name": "Webhook - WA Inbound",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [200, 560],
+      "position": [
+        200,
+        560
+      ],
       "webhookId": "wa-inbound"
     },
     {
       "parameters": {
-        "jsCode": "// ---------------------------------------------------------------\n// Normalize node: extracts sender number and message text from\n// the Evolution API v2 webhook payload.\n//\n// Filters out:\n//   - Messages sent BY the bot (fromMe = true)\n//   - Group messages (remoteJid ends with @g.us)\n//   - Messages with no text content\n//\n// Output: { from, text, cmd } where:\n//   from = digits-only phone number (e.g. '919876543210')\n//   text = original message text (trimmed)\n//   cmd  = text uppercased (for command matching)\n// ---------------------------------------------------------------\nconst data = $input.first().json.body?.data;\n\nif (!data) return [];\n\n// Skip messages sent by the bot itself\nif (data.key?.fromMe) return [];\n\nconst remoteJid = data.key?.remoteJid || '';\n\n// Skip group messages\nif (remoteJid.endsWith('@g.us')) return [];\n\n// Extract text from either regular or extended text message\nconst text = (\n  data.message?.conversation ||\n  data.message?.extendedTextMessage?.text ||\n  ''\n).trim();\n\nif (!text) return [];\n\n// Extract phone number: remove @s.whatsapp.net or @lid suffix\nlet from = remoteJid.replace(/@.*$/, '');\n\n// ASSUMPTION: If remoteJid uses @lid format, the actual phone\n// number may be in data.pushName or another field. We use the\n// numeric part of remoteJid as fallback.\n\nreturn [{\n  json: {\n    from,\n    text,\n    cmd: text.toUpperCase().trim()\n  }\n}];"
+        "jsCode": "// ---------------------------------------------------------------\n// Normalize node: extracts sender number and message text from\n// the Evolution API v2 webhook payload.\n//\n// Filters out:\n//   - Messages sent BY the bot (fromMe = true)\n//   - Group messages (remoteJid ends with @g.us)\n//   - Messages with no text content\n// ---------------------------------------------------------------\nconst data = $input.first().json.body?.data;\n\nif (!data) return [];\n\n// Skip messages sent by the bot itself\nif (data.key?.fromMe) return [];\n\nconst remoteJid = data.key?.remoteJid || '';\n\n// Skip group messages\nif (remoteJid.endsWith('@g.us')) return [];\n\n// Extract text from regular, extended, or captioned messages\nconst text = (\n  data.message?.conversation ||\n  data.message?.extendedTextMessage?.text ||\n  data.message?.imageMessage?.caption ||\n  data.message?.videoMessage?.caption ||\n  ''\n).trim();\n\nif (!text) return [];\n\n// Prefer an alternate JID that explicitly contains the phone number.\n// Evolution/Baileys can send @lid JIDs; remoteJidAlt/sender usually\n// carry the real @s.whatsapp.net address in that case.\nconst candidates = [\n  data.key?.remoteJidAlt,\n  data.key?.senderPn,\n  data.sender,\n  remoteJid,\n].filter(Boolean).map(String);\nconst phoneJid = candidates.find((j) => j.endsWith('@s.whatsapp.net')) || remoteJid;\nconst from = phoneJid.replace(/@.*$/, '').replace(/\\D/g, '');\n\nif (!from) return [];\n\nreturn [{\n  json: {\n    from,\n    text,\n    cmd: text.toUpperCase().trim()\n  }\n}];"
       },
       "id": "code-normalize",
       "name": "Normalize",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [420, 560]
+      "position": [
+        420,
+        560
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT * FROM registrations WHERE whatsapp_number = $1",
+        "query": "SELECT r.* FROM (VALUES ($1::varchar)) AS v(whatsapp_number) LEFT JOIN registrations r ON r.whatsapp_number = v.whatsapp_number",
         "options": {
           "queryReplacement": "={{ $json.from }}"
         }
@@ -36,8 +42,11 @@
       "id": "pg-get-user",
       "name": "Get User",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [640, 560],
+      "typeVersion": 2.8,
+      "position": [
+        640,
+        560
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -48,13 +57,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
             {
               "id": "cond-has-user",
               "leftValue": "={{ $json.id }}",
               "rightValue": "",
-              "operator": { "type": "string", "operation": "isNotEmpty" }
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
             }
           ],
           "combinator": "and"
@@ -65,7 +81,10 @@
       "name": "Registered?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [860, 560]
+      "position": [
+        860,
+        560
+      ]
     },
     {
       "parameters": {
@@ -75,7 +94,10 @@
       "name": "Unregistered Handler",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1080, 720]
+      "position": [
+        1080,
+        720
+      ]
     },
     {
       "parameters": {
@@ -88,8 +110,11 @@
       "id": "pg-check-unregistered-flood",
       "name": "Check Unregistered Flood",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [1300, 720],
+      "typeVersion": 2.8,
+      "position": [
+        1300,
+        720
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -100,13 +125,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
             {
               "id": "cond-unreg-silent",
               "leftValue": "={{ parseInt($json.c) }}",
               "rightValue": 3,
-              "operator": { "type": "number", "operation": "lt" }
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
             }
           ],
           "combinator": "and"
@@ -117,7 +149,10 @@
       "name": "Should Reply?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1520, 720]
+      "position": [
+        1520,
+        720
+      ]
     },
     {
       "parameters": {
@@ -130,8 +165,11 @@
       "id": "pg-log-unregistered",
       "name": "Log Unregistered",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [1740, 660],
+      "typeVersion": 2.8,
+      "position": [
+        1740,
+        660
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -141,19 +179,52 @@
     },
     {
       "parameters": {
-        "workflowId": { "__rl": true, "mode": "list", "value": "" },
-        "fields": {
-          "values": [
-            { "name": "number", "value": "={{ $('Normalize').first().json.from }}" },
-            { "name": "text", "value": "You are not registered. Please sign up at http://localhost:3000/register.html" }
-          ]
-        }
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "00-send-reply"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "number": "={{ $('Normalize').first().json.from }}",
+            "text": "You are not registered. Please sign up at http://localhost:3000/register.html"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false
+        },
+        "mode": "once",
+        "options": {}
       },
       "id": "exec-unreg-reply",
       "name": "Reply Unregistered",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [1960, 660]
+      "typeVersion": 1.2,
+      "position": [
+        1960,
+        660
+      ]
     },
     {
       "parameters": {
@@ -166,8 +237,11 @@
       "id": "pg-log-unreg-silent",
       "name": "Log Silent Block",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [1740, 820],
+      "typeVersion": 2.8,
+      "position": [
+        1740,
+        820
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -186,8 +260,11 @@
       "id": "pg-log-message",
       "name": "Log Message",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [1080, 460],
+      "typeVersion": 2.8,
+      "position": [
+        1080,
+        460
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -206,8 +283,11 @@
       "id": "pg-check-flood",
       "name": "Check Flood (R1)",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [1300, 460],
+      "typeVersion": 2.8,
+      "position": [
+        1300,
+        460
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -218,13 +298,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
             {
               "id": "cond-flood",
               "leftValue": "={{ parseInt($json.c) }}",
               "rightValue": 10,
-              "operator": { "type": "number", "operation": "lte" }
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
             }
           ],
           "combinator": "and"
@@ -235,7 +322,10 @@
       "name": "Not Flooding?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1520, 460]
+      "position": [
+        1520,
+        460
+      ]
     },
     {
       "parameters": {
@@ -245,7 +335,10 @@
       "name": "Flood Block Handler",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1740, 560]
+      "position": [
+        1740,
+        560
+      ]
     },
     {
       "parameters": {
@@ -258,8 +351,11 @@
       "id": "pg-set-block-15",
       "name": "Block 15min",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [1960, 520],
+      "typeVersion": 2.8,
+      "position": [
+        1960,
+        520
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -278,8 +374,11 @@
       "id": "pg-log-flood",
       "name": "Log Flood Block",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2180, 520],
+      "typeVersion": 2.8,
+      "position": [
+        2180,
+        520
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -289,19 +388,52 @@
     },
     {
       "parameters": {
-        "workflowId": { "__rl": true, "mode": "list", "value": "" },
-        "fields": {
-          "values": [
-            { "name": "number", "value": "={{ $('Normalize').first().json.from }}" },
-            { "name": "text", "value": "⚠️ You're sending too many messages. You've been temporarily blocked for 15 minutes." }
-          ]
-        }
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "00-send-reply"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "number": "={{ $('Normalize').first().json.from }}",
+            "text": "⚠️ You're sending too many messages. You've been temporarily blocked for 15 minutes."
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false
+        },
+        "mode": "once",
+        "options": {}
       },
       "id": "exec-flood-warn",
       "name": "Warn Flood",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [2400, 520]
+      "typeVersion": 1.2,
+      "position": [
+        2400,
+        520
+      ]
     },
     {
       "parameters": {
@@ -314,8 +446,11 @@
       "id": "pg-check-repeat",
       "name": "Check Repeat (R4)",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2400, 640],
+      "typeVersion": 2.8,
+      "position": [
+        2400,
+        640
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -326,13 +461,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
             {
               "id": "cond-repeat",
               "leftValue": "={{ parseInt($json.c) }}",
               "rightValue": 3,
-              "operator": { "type": "number", "operation": "gte" }
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
             }
           ],
           "combinator": "and"
@@ -343,7 +485,10 @@
       "name": "Repeat Offender?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [2620, 640]
+      "position": [
+        2620,
+        640
+      ]
     },
     {
       "parameters": {
@@ -356,8 +501,11 @@
       "id": "pg-block-24h",
       "name": "Block 24h (R4)",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2840, 600],
+      "typeVersion": 2.8,
+      "position": [
+        2840,
+        600
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -368,19 +516,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
             {
               "id": "cond-currently-blocked",
-              "leftValue": "={{ $('Get User').first().json.is_blocked }}",
+              "leftValue": "={{ $('Get User').first().json.blocked_until ? new Date($('Get User').first().json.blocked_until) > new Date() : false }}",
               "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true" }
-            },
-            {
-              "id": "cond-blocked-until",
-              "leftValue": "={{ new Date($('Get User').first().json.blocked_until) > new Date() }}",
-              "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true" }
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
             }
           ],
           "combinator": "and"
@@ -391,7 +540,10 @@
       "name": "Currently Blocked? (R6)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1740, 360]
+      "position": [
+        1740,
+        360
+      ]
     },
     {
       "parameters": {
@@ -404,8 +556,11 @@
       "id": "pg-log-blocked-silent",
       "name": "Log Blocked Silent",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [1960, 300],
+      "typeVersion": 2.8,
+      "position": [
+        1960,
+        300
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -415,31 +570,99 @@
     },
     {
       "parameters": {
-        "jsCode": "// ---------------------------------------------------------------\n// Main command router.\n// Reads cmd (uppercase text) and the user's chat_state from\n// the registrations table to determine what to do next.\n//\n// Global commands (any state): CANCEL, HELP\n// State-specific: BOOK (IDLE), STATUS (IDLE), or the current\n//   booking flow step (ASK_CATEGORY, ASK_QTY, etc.)\n// ---------------------------------------------------------------\nconst user = $('Get User').first().json;\nconst norm = $('Normalize').first().json;\nconst cmd = norm.cmd;\nconst text = norm.text;\nconst state = user.chat_state || 'IDLE';\nlet context = user.chat_context || {};\nif (typeof context === 'string') context = JSON.parse(context);\n\nconst CATEGORIES = { '1': 'phone', '2': 'laptop', '3': 'battery', '4': 'appliance', '5': 'cables', '6': 'other' };\n\n// Build response object\nlet result = {\n  userId: user.id,\n  from: norm.from,\n  state: state,\n  newState: state,\n  context: context,\n  newContext: context,\n  replyText: '',\n  action: 'reply',           // reply | book | none\n  bookingData: null\n};\n\n// --- Global commands ---\nif (cmd === 'CANCEL') {\n  result.newState = 'IDLE';\n  result.newContext = {};\n  result.replyText = '❌ Cancelled. Type BOOK to start a new pickup or HELP for commands.';\n  return [{ json: result }];\n}\n\nif (cmd === 'HELP') {\n  result.replyText = `📋 *Available Commands:*\\n\\n*BOOK* — Schedule an e-waste pickup\\n*STATUS* — View your recent bookings\\n*CANCEL* — Cancel the current operation\\n*HELP* — Show this message`;\n  return [{ json: result }];\n}\n\n// --- State machine ---\nswitch (state) {\n  case 'IDLE':\n    if (cmd === 'BOOK') {\n      result.action = 'check_booking_limits';\n      result.replyText = '';\n      return [{ json: result }];\n    }\n    if (cmd === 'STATUS') {\n      result.action = 'show_status';\n      return [{ json: result }];\n    }\n    // Default for IDLE\n    result.replyText = `Hi ${user.full_name}! 👋\\n\\nType *BOOK* to schedule an e-waste pickup\\nType *STATUS* to see your bookings\\nType *HELP* for all commands`;\n    return [{ json: result }];\n\n  case 'ASK_CATEGORY':\n    if (CATEGORIES[cmd] || CATEGORIES[text]) {\n      const cat = CATEGORIES[cmd] || CATEGORIES[text];\n      result.newState = 'ASK_QTY';\n      result.newContext = { ...context, category: cat };\n      result.replyText = `📦 Category: *${cat}*\\n\\nHow many items? (1-50)`;\n    } else {\n      result.replyText = `Sorry, I didn't get that. Please reply with a number:\\n\\n1️⃣ Phone\\n2️⃣ Laptop\\n3️⃣ Battery\\n4️⃣ Appliance\\n5️⃣ Cables\\n6️⃣ Other`;\n    }\n    return [{ json: result }];\n\n  case 'ASK_QTY':\n    const qty = parseInt(text);\n    if (isNaN(qty) || qty < 1 || qty > 50) {\n      result.replyText = 'Sorry, I didn\\'t get that. Please enter a number between 1 and 50.';\n    } else {\n      result.newState = 'ASK_ADDRESS';\n      result.newContext = { ...context, quantity: qty };\n      let addrMsg = '📍 Please enter the pickup address.';\n      if (user.default_address) {\n        addrMsg += '\\n\\nReply *SAME* to use your saved address:\\n' + user.default_address;\n      }\n      result.replyText = addrMsg;\n    }\n    return [{ json: result }];\n\n  case 'ASK_ADDRESS':\n    let address = text;\n    if (cmd === 'SAME' && user.default_address) {\n      address = user.default_address;\n    }\n    if (address.length < 5) {\n      result.replyText = 'Sorry, the address seems too short. Please enter a full pickup address.';\n    } else {\n      result.newState = 'ASK_DATE';\n      result.newContext = { ...context, address: address };\n      result.replyText = '📅 Pickup date? Format: *DD-MM-YYYY*\\n(Must be within the next 14 days)';\n    }\n    return [{ json: result }];\n\n  case 'ASK_DATE':\n    // Parse DD-MM-YYYY\n    const parts = text.match(/^(\\d{1,2})-(\\d{1,2})-(\\d{4})$/);\n    if (!parts) {\n      result.replyText = 'Sorry, I didn\\'t get that. Please enter the date in *DD-MM-YYYY* format.';\n      return [{ json: result }];\n    }\n    const day = parseInt(parts[1]);\n    const month = parseInt(parts[2]) - 1;\n    const year = parseInt(parts[3]);\n    const pickupDate = new Date(year, month, day);\n    const today = new Date();\n    today.setHours(0, 0, 0, 0);\n    const maxDate = new Date(today);\n    maxDate.setDate(maxDate.getDate() + 14);\n\n    if (isNaN(pickupDate.getTime())) {\n      result.replyText = 'Invalid date. Please enter a valid date in *DD-MM-YYYY* format.';\n    } else if (pickupDate <= today) {\n      result.replyText = 'The date must be in the future. Please try again.';\n    } else if (pickupDate > maxDate) {\n      result.replyText = 'The date must be within the next 14 days. Please try again.';\n    } else {\n      const dateStr = `${String(day).padStart(2,'0')}-${String(month+1).padStart(2,'0')}-${year}`;\n      const isoDate = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;\n      result.newState = 'CONFIRM';\n      result.newContext = { ...context, pickup_date: isoDate, pickup_date_display: dateStr };\n      result.replyText = `📋 *Booking Summary:*\\n\\n` +\n        `📦 Category: *${context.category}*\\n` +\n        `🔢 Quantity: *${context.quantity}*\\n` +\n        `📍 Address: ${context.address}\\n` +\n        `📅 Date: *${dateStr}*\\n\\n` +\n        `Reply *YES* to confirm or *CANCEL* to abort.`;\n    }\n    return [{ json: result }];\n\n  case 'CONFIRM':\n    if (cmd === 'YES') {\n      // Generate booking reference: EW- + 6 random alphanumerics\n      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';\n      let ref = 'EW-';\n      for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];\n      result.action = 'book';\n      result.newState = 'IDLE';\n      result.bookingData = {\n        booking_ref: ref,\n        registration_id: user.id,\n        item_category: context.category,\n        quantity: context.quantity,\n        pickup_address: context.address,\n        pickup_date: context.pickup_date\n      };\n      result.newContext = {};\n      result.replyText = `✅ *Booked!* Your reference is *${ref}*\\n\\nWe'll pick up your ${context.category} (x${context.quantity}) on ${context.pickup_date_display}.\\n\\nType *STATUS* to check your bookings.`;\n    } else {\n      result.replyText = 'Please reply *YES* to confirm or *CANCEL* to abort.';\n    }\n    return [{ json: result }];\n\n  default:\n    result.newState = 'IDLE';\n    result.newContext = {};\n    result.replyText = 'Something went wrong. Type *HELP* for available commands.';\n    return [{ json: result }];\n}\n"
+        "jsCode": "// ---------------------------------------------------------------\n// Main command router.\n// Reads cmd (uppercase text) and the user's chat_state from\n// the registrations table to determine what to do next.\n//\n// Global commands (any state): CANCEL, HELP\n// State-specific: BOOK (IDLE), STATUS (IDLE), or the current\n//   booking flow step (ASK_CATEGORY, ASK_QTY, etc.)\n// ---------------------------------------------------------------\nconst user = $('Get User').first().json;\nconst norm = $('Normalize').first().json;\nconst cmd = norm.cmd;\nconst text = norm.text;\nconst state = user.chat_state || 'IDLE';\nlet context = user.chat_context || {};\nif (typeof context === 'string') context = JSON.parse(context);\n\nconst CATEGORIES = { '1': 'phone', '2': 'laptop', '3': 'battery', '4': 'appliance', '5': 'cables', '6': 'other' };\n\n// Build response object\nlet result = {\n  userId: user.id,\n  from: norm.from,\n  state: state,\n  newState: state,\n  context: context,\n  newContext: context,\n  replyText: '',\n  action: 'reply',           // reply | book | none\n  bookingData: null\n};\n\n// --- Global commands ---\nif (cmd === 'CANCEL') {\n  result.newState = 'IDLE';\n  result.newContext = {};\n  result.replyText = '❌ Cancelled. Type BOOK to start a new pickup or HELP for commands.';\n  return [{ json: result }];\n}\n\nif (cmd === 'HELP') {\n  result.replyText = `📋 *Available Commands:*\\n\\n*BOOK* — Schedule an e-waste pickup\\n*STATUS* — View your recent bookings\\n*CANCEL* — Cancel the current operation\\n*HELP* — Show this message`;\n  return [{ json: result }];\n}\n\n// --- State machine ---\nswitch (state) {\n  case 'IDLE':\n    if (cmd === 'BOOK') {\n      result.action = 'check_booking_limits';\n      result.replyText = '';\n      return [{ json: result }];\n    }\n    if (cmd === 'STATUS') {\n      result.action = 'show_status';\n      return [{ json: result }];\n    }\n    // Default for IDLE\n    result.replyText = `Hi ${user.full_name}! 👋\\n\\nType *BOOK* to schedule an e-waste pickup\\nType *STATUS* to see your bookings\\nType *HELP* for all commands`;\n    return [{ json: result }];\n\n  case 'ASK_CATEGORY':\n    if (CATEGORIES[cmd] || CATEGORIES[text]) {\n      const cat = CATEGORIES[cmd] || CATEGORIES[text];\n      result.newState = 'ASK_QTY';\n      result.newContext = { ...context, category: cat };\n      result.replyText = `📦 Category: *${cat}*\\n\\nHow many items? (1-50)`;\n    } else {\n      result.replyText = `Sorry, I didn't get that. Please reply with a number:\\n\\n1️⃣ Phone\\n2️⃣ Laptop\\n3️⃣ Battery\\n4️⃣ Appliance\\n5️⃣ Cables\\n6️⃣ Other`;\n    }\n    return [{ json: result }];\n\n  case 'ASK_QTY':\n    const qty = /^\\d+$/.test(text.trim()) ? parseInt(text, 10) : NaN;\n    if (isNaN(qty) || qty < 1 || qty > 50) {\n      result.replyText = 'Sorry, I didn\\'t get that. Please enter a number between 1 and 50.';\n    } else {\n      result.newState = 'ASK_ADDRESS';\n      result.newContext = { ...context, quantity: qty };\n      let addrMsg = '📍 Please enter the pickup address.';\n      if (user.default_address) {\n        addrMsg += '\\n\\nReply *SAME* to use your saved address:\\n' + user.default_address;\n      }\n      result.replyText = addrMsg;\n    }\n    return [{ json: result }];\n\n  case 'ASK_ADDRESS':\n    let address = text;\n    if (cmd === 'SAME' && user.default_address) {\n      address = user.default_address;\n    }\n    if (address.length < 5) {\n      result.replyText = 'Sorry, the address seems too short. Please enter a full pickup address.';\n    } else {\n      result.newState = 'ASK_DATE';\n      result.newContext = { ...context, address: address };\n      result.replyText = '📅 Pickup date? Format: *DD-MM-YYYY*\\n(Must be within the next 14 days)';\n    }\n    return [{ json: result }];\n\n  case 'ASK_DATE':\n    // Parse DD-MM-YYYY\n    const parts = text.match(/^(\\d{1,2})-(\\d{1,2})-(\\d{4})$/);\n    if (!parts) {\n      result.replyText = 'Sorry, I didn\\'t get that. Please enter the date in *DD-MM-YYYY* format.';\n      return [{ json: result }];\n    }\n    const day = parseInt(parts[1]);\n    const month = parseInt(parts[2]) - 1;\n    const year = parseInt(parts[3]);\n    const pickupDate = new Date(year, month, day);\n    const validComponents = pickupDate.getFullYear() === year && pickupDate.getMonth() === month && pickupDate.getDate() === day;\n    const today = new Date();\n    today.setHours(0, 0, 0, 0);\n    const maxDate = new Date(today);\n    maxDate.setDate(maxDate.getDate() + 14);\n\n    if (!validComponents || isNaN(pickupDate.getTime())) {\n      result.replyText = 'Invalid date. Please enter a valid date in *DD-MM-YYYY* format.';\n    } else if (pickupDate <= today) {\n      result.replyText = 'The date must be in the future. Please try again.';\n    } else if (pickupDate > maxDate) {\n      result.replyText = 'The date must be within the next 14 days. Please try again.';\n    } else {\n      const dateStr = `${String(day).padStart(2,'0')}-${String(month+1).padStart(2,'0')}-${year}`;\n      const isoDate = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;\n      result.newState = 'CONFIRM';\n      result.newContext = { ...context, pickup_date: isoDate, pickup_date_display: dateStr };\n      result.replyText = `📋 *Booking Summary:*\\n\\n` +\n        `📦 Category: *${context.category}*\\n` +\n        `🔢 Quantity: *${context.quantity}*\\n` +\n        `📍 Address: ${context.address}\\n` +\n        `📅 Date: *${dateStr}*\\n\\n` +\n        `Reply *YES* to confirm or *CANCEL* to abort.`;\n    }\n    return [{ json: result }];\n\n  case 'CONFIRM':\n    if (cmd === 'YES') {\n      // Generate booking reference: EW- + 6 random alphanumerics\n      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';\n      let ref = 'EW-';\n      for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];\n      result.action = 'book';\n      result.newState = 'IDLE';\n      result.bookingData = {\n        booking_ref: ref,\n        registration_id: user.id,\n        item_category: context.category,\n        quantity: context.quantity,\n        pickup_address: context.address,\n        pickup_date: context.pickup_date\n      };\n      result.newContext = {};\n      result.replyText = `✅ *Booked!* Your reference is *${ref}*\\n\\nWe'll pick up your ${context.category} (x${context.quantity}) on ${context.pickup_date_display}.\\n\\nType *STATUS* to check your bookings.`;\n    } else {\n      result.replyText = 'Please reply *YES* to confirm or *CANCEL* to abort.';\n    }\n    return [{ json: result }];\n\n  default:\n    result.newState = 'IDLE';\n    result.newContext = {};\n    result.replyText = 'Something went wrong. Type *HELP* for available commands.';\n    return [{ json: result }];\n}\n"
       },
       "id": "code-router",
       "name": "Command Router",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1960, 360]
+      "position": [
+        1960,
+        360
+      ]
     },
     {
       "parameters": {
         "rules": {
           "values": [
-            { "outputIndex": 0, "conditions": { "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "check_booking_limits", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
-            { "outputIndex": 1, "conditions": { "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "show_status", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
-            { "outputIndex": 2, "conditions": { "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "book", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
-            { "outputIndex": 3, "conditions": { "conditions": [{ "leftValue": "={{ $json.action }}", "rightValue": "reply", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
+            {
+              "outputIndex": 0,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "check_booking_limits",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputIndex": 1,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "show_status",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputIndex": 2,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "book",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputIndex": 3,
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "reply",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
           ]
         },
-        "options": { "fallbackOutput": "extra" }
+        "options": {
+          "fallbackOutput": "extra"
+        }
       },
       "id": "switch-action",
       "name": "Switch Action",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [2180, 360]
+      "position": [
+        2180,
+        360
+      ]
     },
     {
       "parameters": {
@@ -452,8 +675,11 @@
       "id": "pg-daily-cap",
       "name": "Check Daily Cap (R2)",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2400, 160],
+      "typeVersion": 2.8,
+      "position": [
+        2400,
+        160
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -464,13 +690,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
             {
               "id": "cond-daily",
               "leftValue": "={{ parseInt($json.c) }}",
               "rightValue": 3,
-              "operator": { "type": "number", "operation": "lt" }
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
             }
           ],
           "combinator": "and"
@@ -481,7 +714,10 @@
       "name": "Daily Cap OK?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [2620, 160]
+      "position": [
+        2620,
+        160
+      ]
     },
     {
       "parameters": {
@@ -494,8 +730,11 @@
       "id": "pg-pending-cap",
       "name": "Check Pending Cap (R3)",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2840, 100],
+      "typeVersion": 2.8,
+      "position": [
+        2840,
+        100
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -506,13 +745,20 @@
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
           "conditions": [
             {
               "id": "cond-pending",
               "leftValue": "={{ parseInt($json.c) }}",
               "rightValue": 2,
-              "operator": { "type": "number", "operation": "lte" }
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
             }
           ],
           "combinator": "and"
@@ -523,7 +769,10 @@
       "name": "Pending Cap OK?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [3060, 100]
+      "position": [
+        3060,
+        100
+      ]
     },
     {
       "parameters": {
@@ -536,8 +785,11 @@
       "id": "pg-set-ask-cat",
       "name": "Set ASK_CATEGORY",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [3280, 40],
+      "typeVersion": 2.8,
+      "position": [
+        3280,
+        40
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -547,43 +799,82 @@
     },
     {
       "parameters": {
-        "workflowId": { "__rl": true, "mode": "list", "value": "" },
-        "fields": {
-          "values": [
-            { "name": "number", "value": "={{ $('Normalize').first().json.from }}" },
-            { "name": "text", "value": "What are you recycling? Reply with a number:\n\n1️⃣ Phone\n2️⃣ Laptop\n3️⃣ Battery\n4️⃣ Appliance\n5️⃣ Cables\n6️⃣ Other" }
-          ]
-        }
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "00-send-reply"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "number": "={{ $('Normalize').first().json.from }}",
+            "text": "What are you recycling? Reply with a number:\n\n1️⃣ Phone\n2️⃣ Laptop\n3️⃣ Battery\n4️⃣ Appliance\n5️⃣ Cables\n6️⃣ Other"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false
+        },
+        "mode": "once",
+        "options": {}
       },
       "id": "exec-ask-cat",
       "name": "Ask Category",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [3500, 40]
+      "typeVersion": 1.2,
+      "position": [
+        3500,
+        40
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// R2 or R3 violated — refuse booking\nconst from = $('Normalize').first().json.from;\nconst userId = $('Command Router').first().json.userId;\nreturn [{ json: { from, userId, reason: 'booking_cap_exceeded' } }];"
+        "jsCode": "// Rule R2 violated — daily booking cap\nconst from = $('Normalize').first().json.from;\nconst userId = $('Command Router').first().json.userId;\nreturn [{ json: { from, userId, reason: 'daily_booking_cap' } }];"
       },
       "id": "code-booking-refused",
-      "name": "Booking Refused",
+      "name": "Refuse Daily",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3060, 240]
+      "position": [
+        3060,
+        240
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO antispam_log (whatsapp_number, registration_id, event_type, action, reason) VALUES ($1, $2::uuid, 'BOOKING', 'BLOCKED', 'daily_booking_cap')",
+        "query": "INSERT INTO antispam_log (whatsapp_number, registration_id, event_type, action, reason) VALUES ($1, $2::uuid, 'BOOKING', 'BLOCKED', $3)",
         "options": {
-          "queryReplacement": "={{ $json.from }},{{ $json.userId }}"
+          "queryReplacement": "={{ $json.from }},{{ $json.userId }},{{ $json.reason }}"
         }
       },
       "id": "pg-log-cap-refused",
       "name": "Log Cap Refused",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [3280, 240],
+      "typeVersion": 2.8,
+      "position": [
+        3280,
+        240
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -593,24 +884,57 @@
     },
     {
       "parameters": {
-        "workflowId": { "__rl": true, "mode": "list", "value": "" },
-        "fields": {
-          "values": [
-            { "name": "number", "value": "={{ $json.from }}" },
-            { "name": "text", "value": "❌ Sorry, you've reached your booking limit. You can make up to 3 bookings per day and have at most 2 pending pickups.\n\nType *STATUS* to check your existing bookings." }
-          ]
-        }
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "00-send-reply"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "number": "={{ $('Normalize').first().json.from }}",
+            "text": "❌ Sorry, you've reached your booking limit. You can make up to 3 bookings per day and have at most 2 pending pickups.\n\nType *STATUS* to check your existing bookings."
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false
+        },
+        "mode": "once",
+        "options": {}
       },
       "id": "exec-cap-refuse-reply",
       "name": "Reply Cap Refused",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [3500, 240]
+      "typeVersion": 1.2,
+      "position": [
+        3500,
+        240
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT booking_ref, item_category, quantity, pickup_date, status FROM bookings WHERE registration_id = $1::uuid ORDER BY created_at DESC LIMIT 3",
+        "query": "SELECT COALESCE(json_agg(t), '[]'::json) AS bookings FROM (SELECT booking_ref, item_category, quantity, pickup_date, status FROM bookings WHERE registration_id = $1::uuid ORDER BY created_at DESC LIMIT 3) t",
         "options": {
           "queryReplacement": "={{ $json.userId }}"
         }
@@ -618,8 +942,11 @@
       "id": "pg-get-bookings",
       "name": "Get Bookings",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2400, 320],
+      "typeVersion": 2.8,
+      "position": [
+        2400,
+        320
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -629,43 +956,82 @@
     },
     {
       "parameters": {
-        "jsCode": "// Format the last 3 bookings for WhatsApp display\nconst bookings = $input.all().map(i => i.json);\nconst from = $('Normalize').first().json.from;\n\nif (!bookings || bookings.length === 0 || !bookings[0].booking_ref) {\n  return [{ json: { from, text: 'You have no bookings yet. Type *BOOK* to schedule a pickup!' } }];\n}\n\nlet msg = '📋 *Your Recent Bookings:*\\n';\nfor (const b of bookings) {\n  const date = b.pickup_date ? new Date(b.pickup_date).toLocaleDateString('en-IN') : 'N/A';\n  msg += `\\n🔖 *${b.booking_ref}*\\n   ${b.item_category} (x${b.quantity}) — ${date}\\n   Status: ${b.status}\\n`;\n}\n\nreturn [{ json: { from, text: msg } }];"
+        "jsCode": "// Format the last 3 bookings for WhatsApp display.\n// The query returns a single row whose `bookings` field is a JSON array,\n// so this node still runs even when the user has no bookings.\nconst row = $input.first().json;\nconst bookings = Array.isArray(row.bookings) ? row.bookings : [];\nconst from = $('Normalize').first().json.from;\n\nif (bookings.length === 0) {\n  return [{ json: { from, text: 'You have no bookings yet. Type *BOOK* to schedule a pickup!' } }];\n}\n\nlet msg = '📋 *Your Recent Bookings:*\\n';\nfor (const b of bookings) {\n  const date = b.pickup_date ? new Date(b.pickup_date).toLocaleDateString('en-IN') : 'N/A';\n  msg += `\\n🔖 *${b.booking_ref}*\\n   ${b.item_category} (x${b.quantity}) — ${date}\\n   Status: ${b.status}\\n`;\n}\n\nreturn [{ json: { from, text: msg } }];"
       },
       "id": "code-format-status",
       "name": "Format Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2620, 320]
+      "position": [
+        2620,
+        320
+      ]
     },
     {
       "parameters": {
-        "workflowId": { "__rl": true, "mode": "list", "value": "" },
-        "fields": {
-          "values": [
-            { "name": "number", "value": "={{ $json.from }}" },
-            { "name": "text", "value": "={{ $json.text }}" }
-          ]
-        }
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "00-send-reply"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "number": "={{ $json.from }}",
+            "text": "={{ $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false
+        },
+        "mode": "once",
+        "options": {}
       },
       "id": "exec-status-reply",
       "name": "Send Status",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [2840, 320]
+      "typeVersion": 1.2,
+      "position": [
+        2840,
+        320
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
         "query": "INSERT INTO bookings (booking_ref, registration_id, item_category, quantity, pickup_address, pickup_date) VALUES ($1, $2::uuid, $3, $4, $5, $6)",
         "options": {
-          "queryReplacement": "={{ $json.bookingData.booking_ref }},{{ $json.bookingData.registration_id }},={{ $json.bookingData.item_category }},={{ $json.bookingData.quantity }},={{ $json.bookingData.pickup_address }},={{ $json.bookingData.pickup_date }}"
+          "queryReplacement": "={{ $('Command Router').first().json.bookingData.booking_ref }},{{ $('Command Router').first().json.bookingData.registration_id }},{{ $('Command Router').first().json.bookingData.item_category }},{{ $('Command Router').first().json.bookingData.quantity }},{{ $('Command Router').first().json.bookingData.pickup_address }},{{ $('Command Router').first().json.bookingData.pickup_date }}"
         }
       },
       "id": "pg-insert-booking",
       "name": "Insert Booking",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2400, 460],
+      "typeVersion": 2.8,
+      "position": [
+        2400,
+        460
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -678,14 +1044,17 @@
         "operation": "executeQuery",
         "query": "INSERT INTO antispam_log (whatsapp_number, registration_id, event_type, action) VALUES ($1, $2::uuid, 'BOOKING', 'ALLOWED')",
         "options": {
-          "queryReplacement": "={{ $('Normalize').first().json.from }},={{ $json.userId }}"
+          "queryReplacement": "={{ $('Normalize').first().json.from }},{{ $('Command Router').first().json.userId }}"
         }
       },
       "id": "pg-log-booking",
       "name": "Log Booking Allowed",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2620, 460],
+      "typeVersion": 2.8,
+      "position": [
+        2620,
+        460
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -698,14 +1067,17 @@
         "operation": "executeQuery",
         "query": "UPDATE registrations SET chat_state = $1, chat_context = $2::jsonb WHERE id = $3::uuid",
         "options": {
-          "queryReplacement": "={{ $json.newState }},={{ JSON.stringify($json.newContext) }},={{ $json.userId }}"
+          "queryReplacement": "={{ $('Command Router').first().json.newState }},{{ JSON.stringify($('Command Router').first().json.newContext) }},{{ $('Command Router').first().json.userId }}"
         }
       },
       "id": "pg-update-state",
       "name": "Update State",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [2400, 600],
+      "typeVersion": 2.8,
+      "position": [
+        2400,
+        600
+      ],
       "credentials": {
         "postgres": {
           "id": "REPLACE_WITH_CREDENTIAL_ID",
@@ -715,143 +1087,608 @@
     },
     {
       "parameters": {
-        "workflowId": { "__rl": true, "mode": "list", "value": "" },
-        "fields": {
-          "values": [
-            { "name": "number", "value": "={{ $json.from }}" },
-            { "name": "text", "value": "={{ $json.replyText }}" }
-          ]
-        }
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "",
+          "cachedResultName": "00-send-reply"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "number": "={{ $('Command Router').first().json.from }}",
+            "text": "={{ $('Command Router').first().json.replyText }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false
+        },
+        "mode": "once",
+        "options": {}
       },
       "id": "exec-generic-reply",
       "name": "Send Reply",
       "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [2620, 600]
+      "typeVersion": 1.2,
+      "position": [
+        2620,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Rule R3 violated — pending booking cap\nconst from = $('Normalize').first().json.from;\nconst userId = $('Command Router').first().json.userId;\nreturn [{ json: { from, userId, reason: 'pending_cap' } }];"
+      },
+      "id": "code-booking-refused-pending",
+      "name": "Refuse Pending",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3060,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) AS c FROM antispam_log WHERE whatsapp_number = $1 AND action = 'BLOCKED' AND created_at > NOW() - INTERVAL '24 hours'",
+        "options": {
+          "queryReplacement": "={{ $('Normalize').first().json.from }}"
+        }
+      },
+      "id": "pg-check-refusal-repeat",
+      "name": "Check Refusal Repeat (R4)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        3500,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ewaste DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-refusal-repeat",
+              "leftValue": "={{ parseInt($json.c) }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-refusal-repeat",
+      "name": "Refusal Repeat Offender?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3720,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE registrations SET is_blocked = TRUE, blocked_until = NOW() + INTERVAL '24 hours' WHERE id = $1::uuid",
+        "options": {
+          "queryReplacement": "={{ $('Command Router').first().json.userId }}"
+        }
+      },
+      "id": "pg-block-24h-refusal",
+      "name": "Block 24h Refusal (R4)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        3940,
+        260
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ewaste DB"
+        }
+      }
     }
   ],
   "connections": {
     "Webhook - WA Inbound": {
-      "main": [[ { "node": "Normalize", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalize": {
-      "main": [[ { "node": "Get User", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Get User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Get User": {
-      "main": [[ { "node": "Registered?", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Registered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Registered?": {
       "main": [
-        [ { "node": "Log Message", "type": "main", "index": 0 } ],
-        [ { "node": "Unregistered Handler", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Log Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unregistered Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Unregistered Handler": {
-      "main": [[ { "node": "Check Unregistered Flood", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Check Unregistered Flood",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Check Unregistered Flood": {
-      "main": [[ { "node": "Should Reply?", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Should Reply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Should Reply?": {
       "main": [
-        [ { "node": "Log Unregistered", "type": "main", "index": 0 } ],
-        [ { "node": "Log Silent Block", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Log Unregistered",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Silent Block",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Log Unregistered": {
-      "main": [[ { "node": "Reply Unregistered", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Reply Unregistered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Log Message": {
-      "main": [[ { "node": "Check Flood (R1)", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Currently Blocked? (R6)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Check Flood (R1)": {
-      "main": [[ { "node": "Not Flooding?", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Not Flooding?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Not Flooding?": {
       "main": [
-        [ { "node": "Currently Blocked? (R6)", "type": "main", "index": 0 } ],
-        [ { "node": "Flood Block Handler", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Command Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Flood Block Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Flood Block Handler": {
-      "main": [[ { "node": "Block 15min", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Block 15min",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Block 15min": {
-      "main": [[ { "node": "Log Flood Block", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Log Flood Block",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Log Flood Block": {
       "main": [
-        [ { "node": "Warn Flood", "type": "main", "index": 0 } ],
-        [ { "node": "Check Repeat (R4)", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Warn Flood",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Repeat (R4)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Check Repeat (R4)": {
-      "main": [[ { "node": "Repeat Offender?", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Repeat Offender?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Repeat Offender?": {
       "main": [
-        [ { "node": "Block 24h (R4)", "type": "main", "index": 0 } ],
+        [
+          {
+            "node": "Block 24h (R4)",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
       ]
     },
     "Currently Blocked? (R6)": {
       "main": [
-        [ { "node": "Log Blocked Silent", "type": "main", "index": 0 } ],
-        [ { "node": "Command Router", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Log Blocked Silent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Flood (R1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Command Router": {
-      "main": [[ { "node": "Switch Action", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Switch Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Switch Action": {
       "main": [
-        [ { "node": "Check Daily Cap (R2)", "type": "main", "index": 0 } ],
-        [ { "node": "Get Bookings", "type": "main", "index": 0 } ],
-        [ { "node": "Insert Booking", "type": "main", "index": 0 } ],
-        [ { "node": "Update State", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Check Daily Cap (R2)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Bookings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Booking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update State",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Check Daily Cap (R2)": {
-      "main": [[ { "node": "Daily Cap OK?", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Daily Cap OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Daily Cap OK?": {
       "main": [
-        [ { "node": "Check Pending Cap (R3)", "type": "main", "index": 0 } ],
-        [ { "node": "Booking Refused", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Check Pending Cap (R3)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refuse Daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Check Pending Cap (R3)": {
-      "main": [[ { "node": "Pending Cap OK?", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Pending Cap OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Pending Cap OK?": {
       "main": [
-        [ { "node": "Set ASK_CATEGORY", "type": "main", "index": 0 } ],
-        [ { "node": "Booking Refused", "type": "main", "index": 0 } ]
+        [
+          {
+            "node": "Set ASK_CATEGORY",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refuse Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Set ASK_CATEGORY": {
-      "main": [[ { "node": "Ask Category", "type": "main", "index": 0 } ]]
-    },
-    "Booking Refused": {
-      "main": [[ { "node": "Log Cap Refused", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Ask Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Log Cap Refused": {
-      "main": [[ { "node": "Reply Cap Refused", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Check Refusal Repeat (R4)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Get Bookings": {
-      "main": [[ { "node": "Format Status", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Format Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Format Status": {
-      "main": [[ { "node": "Send Status", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Send Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Insert Booking": {
-      "main": [[ { "node": "Log Booking Allowed", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Log Booking Allowed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Log Booking Allowed": {
-      "main": [[ { "node": "Update State", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Update State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Update State": {
-      "main": [[ { "node": "Send Reply", "type": "main", "index": 0 } ]]
+      "main": [
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refuse Daily": {
+      "main": [
+        [
+          {
+            "node": "Log Cap Refused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refuse Pending": {
+      "main": [
+        [
+          {
+            "node": "Log Cap Refused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Refusal Repeat (R4)": {
+      "main": [
+        [
+          {
+            "node": "Refusal Repeat Offender?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refusal Repeat Offender?": {
+      "main": [
+        [
+          {
+            "node": "Block 24h Refusal (R4)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply Cap Refused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Block 24h Refusal (R4)": {
+      "main": [
+        [
+          {
+            "node": "Reply Cap Refused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
