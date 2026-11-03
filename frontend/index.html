@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EcoVolt™ — Smart E-Waste Management & Green Recycling</title>
+  <title>EcoVolt™ — Smart E-Waste Management & Green Logistics</title>
   <meta name="description" content="Certified, safe doorstep e-waste recycling powered by automated WhatsApp scheduling. Zero landfill guarantee." />
   <link rel="stylesheet" href="/style.css" />
 </head>
@@ -19,13 +19,14 @@
 
       <ul class="nav-menu">
         <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
-        <li><a href="#categories" class="nav-link">Accepted E-Waste</a></li>
-        <li><a href="#impact" class="nav-link">Our Impact</a></li>
+        <li><a href="#calculator" class="nav-link">Impact Calculator</a></li>
+        <li><a href="#categories" class="nav-link">Accepted Items</a></li>
         <li><a href="#whatsapp-demo" class="nav-link">WhatsApp Bot</a></li>
       </ul>
 
       <div class="nav-actions" id="navActions">
-        <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="/dashboard.html" class="btn btn-outline btn-sm">Consumer Portal</a>
+        <a href="/admin.html" class="btn btn-outline btn-sm" style="color: var(--slate-700); font-weight: 700;">⚙️ Admin Center</a>
         <a href="/register.html" class="btn btn-primary btn-sm">Get Started</a>
       </div>
     </nav>
@@ -47,7 +48,7 @@
               💬 Open WhatsApp Web
             </a>
             <a href="/dashboard.html" class="btn btn-primary btn-sm">
-              📋 Go to Dashboard
+              📋 Go to Consumer Dashboard
             </a>
             <button onclick="dismissCelebrate()" class="btn btn-outline btn-sm">
               Explore Services
@@ -76,8 +77,11 @@
               <a href="/register.html" class="btn btn-primary">
                 🚀 Schedule Free Pickup
               </a>
-              <a href="#whatsapp-demo" class="btn btn-outline">
-                📱 See WhatsApp Bot
+              <a href="/dashboard.html" class="btn btn-outline">
+                📋 Consumer Portal
+              </a>
+              <a href="/admin.html" class="btn btn-outline" style="border-color: var(--slate-300);">
+                ⚙️ Admin Center
               </a>
             </div>
 
@@ -155,6 +159,80 @@
           <div>
             <div class="stat-num">98.6%</div>
             <div class="stat-label">Material Recovery Rate</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Environmental Savings Calculator ================= -->
+    <section class="section" id="calculator" style="background: var(--white); border-bottom: 1px solid var(--slate-200);">
+      <div class="container">
+        <div class="section-header">
+          <span class="badge badge-primary">Interactive Eco-Calculator</span>
+          <h2>Calculate Your E-Waste Environmental Offset</h2>
+          <p>Estimate the weight diverted, greenhouse gases avoided, and toxic components kept out of landfills.</p>
+        </div>
+
+        <div class="calculator-card">
+          <div class="calc-grid">
+            <div class="calc-inputs">
+              <div class="calc-control">
+                <label for="calcLaptops">💻 Old Laptops / PCs</label>
+                <select id="calcLaptops" onchange="calculateImpact()">
+                  <option value="0">0 units</option>
+                  <option value="1" selected>1 unit</option>
+                  <option value="2">2 units</option>
+                  <option value="3">3 units</option>
+                  <option value="5">5 units</option>
+                  <option value="10">10 units</option>
+                </select>
+              </div>
+
+              <div class="calc-control">
+                <label for="calcPhones">📱 Old Smartphones / Tablets</label>
+                <select id="calcPhones" onchange="calculateImpact()">
+                  <option value="0">0 units</option>
+                  <option value="1">1 unit</option>
+                  <option value="2" selected>2 units</option>
+                  <option value="4">4 units</option>
+                  <option value="8">8 units</option>
+                </select>
+              </div>
+
+              <div class="calc-control">
+                <label for="calcBatteries">🔋 Batteries / Power Banks</label>
+                <select id="calcBatteries" onchange="calculateImpact()">
+                  <option value="0">0 units</option>
+                  <option value="1">1 unit</option>
+                  <option value="2">2 units</option>
+                  <option value="5">5 units</option>
+                </select>
+              </div>
+
+              <div class="calc-control">
+                <label for="calcAppliances">📺 Small Home Appliances</label>
+                <select id="calcAppliances" onchange="calculateImpact()">
+                  <option value="0">0 units</option>
+                  <option value="1">1 unit</option>
+                  <option value="2">2 units</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="calc-result-box">
+              <div style="font-size: 0.85rem; text-transform: uppercase; color: #a7f3d0; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                Estimated Avoided Carbon
+              </div>
+              <div class="calc-result-value" id="calcCo2Result">59 kg CO₂e</div>
+              <div style="margin-top: 1rem; font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+                ⚡ Equivalent to taking <strong><span id="calcCarMiles">240</span> km</strong> of gasoline car emissions off the road, and reclaiming <strong><span id="calcToxins">0.45</span> kg</strong> of recyclable copper and gold.
+              </div>
+              <div style="margin-top: 1.5rem;">
+                <a href="/register.html" class="btn btn-primary" style="background-color: var(--primary-light); color: var(--slate-900); width: 100%;">
+                  Schedule Pickup For These Items
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -279,9 +357,14 @@
                   <strong>CANCEL:</strong> Abort booking process anytime
                 </li>
               </ul>
-              <a href="/register.html" class="btn btn-primary">
-                Get Started Now
-              </a>
+              <div style="display: flex; gap: 0.75rem;">
+                <a href="/register.html" class="btn btn-primary">
+                  Get Started as Consumer
+                </a>
+                <a href="/admin.html" class="btn btn-outline">
+                  Admin Command Center
+                </a>
+              </div>
             </div>
 
             <div style="background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-md);">
@@ -313,8 +396,11 @@
           <a href="/register.html" class="btn btn-primary" style="background-color: var(--primary-light); color: var(--slate-900);">
             🚀 Register Pickup Account
           </a>
-          <a href="/qr.html" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3);">
-            📱 WhatsApp Bot Status
+          <a href="/dashboard.html" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3);">
+            📋 Consumer Portal
+          </a>
+          <a href="/admin.html" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3);">
+            ⚙️ Admin Center
           </a>
         </div>
       </div>
@@ -336,18 +422,19 @@
         </div>
 
         <div class="footer-links">
-          <h4>Portal Links</h4>
+          <h4>Portals & Tools</h4>
           <ul>
             <li><a href="/">Home</a></li>
+            <li><a href="/dashboard.html">Consumer Portal</a></li>
+            <li><a href="/admin.html">Admin Operations Center</a></li>
             <li><a href="/register.html">Register Account</a></li>
             <li><a href="/login.html">Client Login</a></li>
-            <li><a href="/dashboard.html">Pickup Dashboard</a></li>
-            <li><a href="/qr.html">Bot Connection</a></li>
+            <li><a href="/qr.html">Bot Connection (Admin)</a></li>
           </ul>
         </div>
 
         <div class="footer-links">
-          <h4>Categories</h4>
+          <h4>Accepted Waste</h4>
           <ul>
             <li><a href="#categories">Laptops & PCs</a></li>
             <li><a href="#categories">Smartphones</a></li>
@@ -371,9 +458,9 @@
       <div class="footer-bottom">
         <div>&copy; 2026 EcoVolt™ Smart E-Waste Management Portal. All rights reserved.</div>
         <div style="display: flex; gap: 1.5rem;">
+          <a href="/dashboard.html" style="color: var(--slate-400); text-decoration: none;">Consumer Portal</a>
+          <a href="/admin.html" style="color: var(--slate-400); text-decoration: none;">Admin Console</a>
           <a href="#" style="color: var(--slate-400); text-decoration: none;">Privacy Policy</a>
-          <a href="#" style="color: var(--slate-400); text-decoration: none;">Terms of Service</a>
-          <a href="#" style="color: var(--slate-400); text-decoration: none;">E-Waste Compliance</a>
         </div>
       </div>
     </div>
@@ -381,7 +468,6 @@
 
   <script src="/app.js"></script>
   <script>
-    // Handle post-registration welcome banner
     document.addEventListener("DOMContentLoaded", () => {
       const isRegistered = getUrlParam("registered");
       const userName = getUrlParam("name") || getUserName();
@@ -394,10 +480,10 @@
           if (title && userName && userName !== "User") {
             title.textContent = `🎉 Welcome to EcoVolt, ${escapeHtml(userName)}!`;
           }
-          // Scroll to banner smoothly
           banner.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
+      calculateImpact();
     });
 
     function dismissCelebrate() {
@@ -405,8 +491,22 @@
       if (banner) {
         banner.style.display = "none";
       }
-      // Remove the query param from URL cleanly without page reload
       window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function calculateImpact() {
+      const laptops = parseInt(document.getElementById("calcLaptops").value, 10) || 0;
+      const phones = parseInt(document.getElementById("calcPhones").value, 10) || 0;
+      const batteries = parseInt(document.getElementById("calcBatteries").value, 10) || 0;
+      const appliances = parseInt(document.getElementById("calcAppliances").value, 10) || 0;
+
+      const co2 = (laptops * 35.0) + (phones * 12.0) + (batteries * 8.5) + (appliances * 45.0);
+      const carKm = Math.round(co2 * 4.1);
+      const toxinsKg = ((laptops * 0.15) + (phones * 0.05) + (batteries * 0.25) + (appliances * 0.3)).toFixed(2);
+
+      document.getElementById("calcCo2Result").textContent = `${co2.toFixed(0)} kg CO₂e`;
+      document.getElementById("calcCarMiles").textContent = carKm;
+      document.getElementById("calcToxins").textContent = toxinsKg;
     }
   </script>
 </body>

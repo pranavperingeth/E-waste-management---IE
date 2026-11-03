@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Operations Center — EcoVolt™</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .admin-header-badge {
+      background: #1e1b4b;
+      color: #c7d2fe;
+      border: 1px solid #4338ca;
+    }
+    .status-select {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--slate-300);
+      background: var(--white);
+      cursor: pointer;
+    }
+    .status-select:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+  </style>
+</head>
+<body style="background-color: #f1f5f9;">
+
+  <!-- Navigation -->
+  <header>
+    <nav class="navbar" style="background: rgba(15, 23, 42, 0.95); border-bottom-color: var(--slate-800);">
+      <a href="/" class="brand" style="color: white;">
+        <div class="brand-icon" style="background: linear-gradient(135deg, #4f46e5, #065f46);">⚡</div>
+        <span>EcoVolt <span style="font-size: 0.85rem; font-weight: 600; color: #a7f3d0; text-transform: uppercase;">Admin Center</span></span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="/" class="btn btn-outline btn-sm" style="color: #cbd5e1; border-color: var(--slate-700);">Home</a>
+        <a href="/dashboard.html" class="btn btn-outline btn-sm" style="color: #cbd5e1; border-color: var(--slate-700);">Consumer Portal</a>
+        <button onclick="adminLogout()" class="btn btn-outline btn-sm" style="color: #f87171; border-color: #7f1d1d;">Exit Admin</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Admin Gate Modal (If not authenticated) -->
+  <div class="modal-overlay" id="adminGateModal" style="display: none;">
+    <div class="modal-card" style="max-width: 440px; padding: 2.5rem;">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔐</div>
+        <h2 style="font-size: 1.5rem; color: var(--slate-900);">Admin Passkey Required</h2>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 0.25rem;">
+          Enter the administrator passkey to access the operations console.
+        </p>
+      </div>
+
+      <div id="adminGateMsg"></div>
+
+      <form id="adminGateForm">
+        <div class="form-group">
+          <label class="form-label" for="adminKeyInput">Admin Key / Secret</label>
+          <input
+            type="password"
+            id="adminKeyInput"
+            class="form-control"
+            required
+            value="admin123"
+            placeholder="Enter passkey (default: admin123)"
+          />
+          <span class="form-hint">Default demo key: <code>admin123</code> (or your <code>INTERNAL_SECRET</code>)</span>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Authorize Admin Access
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Operations Dashboard -->
+  <main class="container dashboard-container" id="adminContent" style="display: none;">
+    
+    <!-- Top KPI Grid -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem;">
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon" style="background: #e0e7ff; color: #4338ca;">👥</div>
+        <div class="dash-stat-info">
+          <h4>Registered Clients</h4>
+          <span id="kpiUsers">0</span>
+          <div id="kpiBlockedUsers" style="font-size: 0.75rem; color: var(--danger); font-weight: 600; margin-top: 2px;"></div>
+        </div>
+      </div>
+
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-orange">📦</div>
+        <div class="dash-stat-info">
+          <h4>Total Pickups</h4>
+          <span id="kpiBookings">0</span>
+          <div id="kpiPending" style="font-size: 0.75rem; color: var(--warning); font-weight: 600; margin-top: 2px;">0 Pending</div>
+        </div>
+      </div>
+
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-green">♻️</div>
+        <div class="dash-stat-info">
+          <h4>Items Diverted</h4>
+          <span id="kpiItems">0</span>
+          <div style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-top: 2px;">Zero Landfill</div>
+        </div>
+      </div>
+
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon" style="background: #fef2f2; color: #dc2626;">🛡️</div>
+        <div class="dash-stat-info">
+          <h4>Spam Events Blocked</h4>
+          <span id="kpiSpamBlocked">0</span>
+          <div id="kpiBotHealth" style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-top: 2px;">Bot: Checking...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabbed Management Interface -->
+    <div class="panel">
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('pickups')">
+          📦 Pickup Bookings Management
+        </button>
+        <button class="tab-btn" onclick="switchTab('users')">
+          👥 Registered Clients & Bot State
+        </button>
+        <button class="tab-btn" onclick="switchTab('spam')">
+          🛡️ Anti-Spam Security Audit Stream
+        </button>
+      </div>
+
+      <!-- TAB 1: Pickup Bookings -->
+      <div class="tab-pane active" id="tab-pickups">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <label style="font-size: 0.85rem; font-weight: 600; color: var(--slate-600);">Filter Status:</label>
+            <select id="filterStatus" onchange="loadAdminBookings()" class="status-select">
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending Only</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="PICKED_UP">Picked Up</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <button onclick="loadAdminBookings()" class="btn btn-outline btn-sm">🔄 Refresh List</button>
+          </div>
+        </div>
+
+        <div tabindex="0" role="region" aria-label="Bookings Ledger" class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Ref ID</th>
+                <th scope="col">Client Name</th>
+                <th scope="col">WhatsApp Contact</th>
+                <th scope="col">Category</th>
+                <th scope="col">Qty</th>
+                <th scope="col">Pickup Address</th>
+                <th scope="col">Date</th>
+                <th scope="col">Status Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminBookingsBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: Users & Chatbot Memory -->
+      <div class="tab-pane" id="tab-users">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <p style="font-size: 0.9rem; color: var(--slate-600);">
+            Live conversation memory and anti-abuse status of registered WhatsApp clients.
+          </p>
+          <button onclick="loadAdminUsers()" class="btn btn-outline btn-sm">🔄 Refresh Clients</button>
+        </div>
+
+        <div tabindex="0" role="region" aria-label="Registered Consumers" class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Client Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">WhatsApp ID</th>
+                <th scope="col">Bot Chat State</th>
+                <th scope="col">Bookings</th>
+                <th scope="col">Abuse Status</th>
+                <th scope="col">Admin Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: Anti-Spam Security Audit -->
+      <div class="tab-pane" id="tab-spam">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <p style="font-size: 0.9rem; color: var(--slate-600);">
+            Autonomous anti-spam filter events evaluated in real-time by n8n SQL rules (R1-R6).
+          </p>
+          <button onclick="loadAdminSpamLogs()" class="btn btn-outline btn-sm">🔄 Refresh Security Stream</button>
+        </div>
+
+        <div tabindex="0" role="region" aria-label="Security Stream" class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Log ID</th>
+                <th scope="col">WhatsApp Number</th>
+                <th scope="col">Client Name</th>
+                <th scope="col">Event Type</th>
+                <th scope="col">Filter Action</th>
+                <th scope="col">Rule Violation Reason</th>
+                <th scope="col">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="adminSpamBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" style="padding: 2rem 0; margin-top: auto;">
+    <div class="container" style="text-align: center; font-size: 0.85rem; color: var(--slate-500);">
+      &copy; 2026 EcoVolt™ Admin Operations Console. Real-Time Telemetry & Database Management.
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    function getAdminKey() {
+      return localStorage.getItem("ecovolt_admin_key");
+    }
+
+    function setAdminKey(key) {
+      localStorage.setItem("ecovolt_admin_key", key);
+    }
+
+    function adminLogout() {
+      localStorage.removeItem("ecovolt_admin_key");
+      window.location.href = "/";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const key = getAdminKey();
+      if (!key) {
+        document.getElementById("adminGateModal").style.display = "flex";
+      } else {
+        document.getElementById("adminContent").style.display = "block";
+        initAdminData();
+      }
+    });
+
+    document.getElementById("adminGateForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMessage("adminGateMsg");
+      const key = document.getElementById("adminKeyInput").value.trim();
+
+      try {
+        const res = await fetch("/api/admin/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Authentication failed");
+
+        setAdminKey(key);
+        document.getElementById("adminGateModal").style.display = "none";
+        document.getElementById("adminContent").style.display = "block";
+        initAdminData();
+      } catch (err) {
+        showMessage("adminGateMsg", err.message, "error");
+      }
+    });
+
+    async function adminFetch(endpoint, options = {}) {
+      const key = getAdminKey();
+      const headers = {
+        "Content-Type": "application/json",
+        "x-admin-key": key,
+        ...(options.headers || {})
+      };
+
+      const res = await fetch(`/api/admin${endpoint}`, { ...options, headers });
+      if (res.status === 401) {
+        adminLogout();
+        throw new Error("Admin session expired. Please re-enter passkey.");
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Admin request failed");
+      return data;
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
+
+      const targetBtn = Array.from(document.querySelectorAll(".tab-btn")).find(b => b.getAttribute("onclick").includes(tabId));
+      if (targetBtn) targetBtn.classList.add("active");
+      document.getElementById(`tab-${tabId}`).classList.add("active");
+    }
+
+    async function initAdminData() {
+      loadAdminOverview();
+      loadAdminBookings();
+      loadAdminUsers();
+      loadAdminSpamLogs();
+      checkBotHealth();
+    }
+
+    async function checkBotHealth() {
+      try {
+        const health = await adminFetch("/gateway-health");
+        const botEl = document.getElementById("kpiBotHealth");
+        if (health.online && health.state === "open") {
+          botEl.textContent = `Bot: CONNECTED (${health.instance})`;
+          botEl.style.color = "var(--primary)";
+        } else {
+          botEl.textContent = `Bot: ${health.state || 'DISCONNECTED'}`;
+          botEl.style.color = "var(--warning)";
+        }
+      } catch (_) {}
+    }
+
+    async function loadAdminOverview() {
+      try {
+        const data = await adminFetch("/overview");
+        document.getElementById("kpiUsers").textContent = data.users.total_users;
+        if (data.users.blocked_users > 0) {
+          document.getElementById("kpiBlockedUsers").textContent = `⚠️ ${data.users.blocked_users} Blocked`;
+        }
+        document.getElementById("kpiBookings").textContent = data.bookings.total_bookings;
+        document.getElementById("kpiPending").textContent = `${data.bookings.pending_bookings} Pending Action`;
+        document.getElementById("kpiItems").textContent = `${data.bookings.total_items} items`;
+        document.getElementById("kpiSpamBlocked").textContent = data.spam.blocked_events;
+      } catch (err) {
+        console.error("Overview error:", err);
+      }
+    }
+
+    async function loadAdminBookings() {
+      const status = document.getElementById("filterStatus").value;
+      const tbody = document.getElementById("adminBookingsBody");
+      try {
+        const bookings = await adminFetch(`/bookings?status=${status}`);
+        if (bookings.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--slate-500);">No bookings found matching filter.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = bookings.map(b => {
+          const dateStr = new Date(b.pickup_date).toLocaleDateString("en-IN", {
+            day: "numeric", month: "short", year: "numeric"
+          });
+          const waLink = `https://wa.me/${b.whatsapp_number}`;
+
+          return `
+            <tr>
+              <th scope="row" data-label="Ref ID" style="font-family: var(--font-mono); font-weight: 700; color: var(--slate-900);">
+                ${escapeHtml(b.booking_ref)}
+              </th>
+              <td data-label="Client">${escapeHtml(b.full_name)}</td>
+              <td data-label="WhatsApp">
+                <a href="${waLink}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                  +${escapeHtml(b.whatsapp_number)} 💬
+                </a>
+              </td>
+              <td data-label="Category">${escapeHtml(b.item_category)}</td>
+              <td data-label="Qty">${b.quantity}</td>
+              <td data-label="Address" style="max-width: 220px; white-space: normal;">${escapeHtml(b.pickup_address)}</td>
+              <td data-label="Date">${dateStr}</td>
+              <td data-label="Status Action">
+                <select class="status-select" onchange="updateBookingStatus('${b.id}', this.value)">
+                  <option value="PENDING" ${b.status === 'PENDING' ? 'selected' : ''}>PENDING</option>
+                  <option value="CONFIRMED" ${b.status === 'CONFIRMED' ? 'selected' : ''}>CONFIRMED</option>
+                  <option value="PICKED_UP" ${b.status === 'PICKED_UP' ? 'selected' : ''}>PICKED_UP</option>
+                  <option value="CANCELLED" ${b.status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
+                </select>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color: var(--danger); text-align: center;">Error loading bookings: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function updateBookingStatus(id, newStatus) {
+      try {
+        await adminFetch(`/bookings/${id}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: newStatus })
+        });
+        loadAdminOverview();
+      } catch (err) {
+        alert("Failed to update status: " + err.message);
+        loadAdminBookings();
+      }
+    }
+
+    async function loadAdminUsers() {
+      const tbody = document.getElementById("adminUsersBody");
+      try {
+        const users = await adminFetch("/users");
+        tbody.innerHTML = users.map(u => {
+          const isBlocked = u.is_blocked;
+          const statusBadge = isBlocked
+            ? `<span class="status-badge status-cancelled">BLOCKED</span>`
+            : `<span class="status-badge status-picked_up">ACTIVE</span>`;
+
+          const toggleBtnText = isBlocked ? "🔓 Unblock" : "🚫 Block";
+          const toggleBtnStyle = isBlocked ? "color: var(--primary);" : "color: var(--danger);";
+
+          return `
+            <tr>
+              <th scope="row" data-label="Client Name" style="font-weight: 700;">${escapeHtml(u.full_name)}</th>
+              <td data-label="Email">${escapeHtml(u.email)}</td>
+              <td data-label="WhatsApp">+${escapeHtml(u.whatsapp_number)}</td>
+              <td data-label="Bot State">
+                <span style="font-family: var(--font-mono); font-size: 0.8rem; background: var(--slate-100); padding: 0.2rem 0.5rem; border-radius: 4px;">
+                  ${escapeHtml(u.chat_state)}
+                </span>
+              </td>
+              <td data-label="Bookings">${u.bookings_count}</td>
+              <td data-label="Status">${statusBadge}</td>
+              <td data-label="Action">
+                <button onclick="toggleUserBlock('${u.id}')" class="btn btn-outline btn-sm" style="${toggleBtnStyle}">
+                  ${toggleBtnText}
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color: var(--danger); text-align: center;">Error loading users: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function toggleUserBlock(userId) {
+      if (!confirm("Are you sure you want to change this client's block status?")) return;
+      try {
+        await adminFetch(`/users/${userId}/toggle-block`, { method: "POST" });
+        loadAdminOverview();
+        loadAdminUsers();
+      } catch (err) {
+        alert("Failed to toggle block status: " + err.message);
+      }
+    }
+
+    async function loadAdminSpamLogs() {
+      const tbody = document.getElementById("adminSpamBody");
+      try {
+        const logs = await adminFetch("/antispam-logs");
+        if (logs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--slate-500);">No antispam audit logs recorded yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = logs.map(l => {
+          const actionBadge = l.action === "BLOCKED"
+            ? `<span class="status-badge status-cancelled" style="background:#fee2e2; color:#b91c1c;">BLOCKED</span>`
+            : `<span class="status-badge status-picked_up">ALLOWED</span>`;
+
+          const timeStr = new Date(l.created_at).toLocaleTimeString("en-IN", {
+            hour: "2-digit", minute: "2-digit", second: "2-digit", day: "numeric", month: "short"
+          });
+
+          return `
+            <tr>
+              <th scope="row" data-label="Log ID" style="font-family: var(--font-mono); font-size: 0.8rem;">#${l.id}</th>
+              <td data-label="WhatsApp">+${escapeHtml(l.whatsapp_number)}</td>
+              <td data-label="Client">${escapeHtml(l.full_name || 'Anonymous/Unregistered')}</td>
+              <td data-label="Event Type"><strong>${escapeHtml(l.event_type)}</strong></td>
+              <td data-label="Action">${actionBadge}</td>
+              <td data-label="Reason" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--slate-700);">
+                ${escapeHtml(l.reason || 'none')}
+              </td>
+              <td data-label="Timestamp" style="font-size: 0.8rem; color: var(--slate-500);">${timeStr}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color: var(--danger); text-align: center;">Error loading logs: ${err.message}</td></tr>`;
+      }
+    }
+  </script>
+</body>
+</html>

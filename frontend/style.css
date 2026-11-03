@@ -975,3 +975,336 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     text-align: center;
   }
 }
+
+/* ===============================================================
+   Responsive Container-Query Table (Modern Web Guidance)
+   =============================================================== */
+.table-wrapper {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: min(550px, 80vh);
+  container-type: inline-size;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--slate-200);
+  background: var(--white);
+}
+
+.table-wrapper table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+/* Sticky column headers */
+.table-wrapper thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 10;
+  background-color: var(--slate-100);
+}
+
+.table-wrapper thead th {
+  padding: 0.85rem 1rem;
+  font-weight: 700;
+  color: var(--slate-700);
+  border-bottom: 2px solid var(--slate-200);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.table-wrapper tbody td,
+.table-wrapper tbody th {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--slate-200);
+  color: var(--slate-800);
+  background: var(--white);
+}
+
+.table-wrapper tbody tr:hover td,
+.table-wrapper tbody tr:hover th {
+  background-color: var(--slate-50);
+}
+
+/* Container query transformation for compact/stacked screens */
+@container (width < 640px) {
+  .table-wrapper table,
+  .table-wrapper thead,
+  .table-wrapper tbody,
+  .table-wrapper tr,
+  .table-wrapper th,
+  .table-wrapper td {
+    display: block;
+  }
+
+  .table-wrapper thead {
+    display: none; /* Hide column headers in stacked view */
+  }
+
+  .table-wrapper tbody tr {
+    margin-block-end: 1rem;
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .table-wrapper tbody td,
+  .table-wrapper tbody th {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--slate-100);
+    padding: 0.65rem 0.85rem;
+  }
+
+  .table-wrapper tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--slate-500);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 1rem;
+  }
+}
+
+/* ===============================================================
+   Tabs, Stepper, Impact Widget & Admin Operations Center
+   =============================================================== */
+.tabs-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--slate-200);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 0.75rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--slate-500);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--primary);
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-pane {
+  display: none;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pickup Progression Stepper */
+.stepper-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding: 1.5rem 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--slate-50);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--slate-200);
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: 2;
+  position: relative;
+  flex: 1;
+}
+
+.step-icon-bubble {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2px solid var(--slate-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: var(--slate-400);
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.stepper-step.completed .step-icon-bubble {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.stepper-step.current .step-icon-bubble {
+  background: var(--white);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-subtle);
+}
+
+.step-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--slate-500);
+}
+
+.stepper-step.completed .step-label,
+.stepper-step.current .step-label {
+  color: var(--slate-900);
+}
+
+/* Green Calculator on Homepage */
+.calculator-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem;
+  box-shadow: var(--shadow-md);
+  margin-top: 3rem;
+}
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.calc-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.calc-control {
+  background: var(--white);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--slate-200);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calc-control label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.calc-control select {
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--slate-300);
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.calc-result-box {
+  background: var(--slate-900);
+  color: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.calc-result-value {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: #34d399;
+  letter-spacing: -0.02em;
+}
+
+/* Digital Certificate Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  max-width: 650px;
+  width: 100%;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  position: relative;
+  animation: modalIn 0.25s ease-out;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.certificate-frame {
+  padding: 3rem 2.5rem;
+  border: 8px solid #064e3b;
+  margin: 1rem;
+  background: radial-gradient(circle at center, #ffffff 60%, #f0fdf4 100%);
+  text-align: center;
+  position: relative;
+}
+
+.cert-stamp {
+  position: absolute;
+  bottom: 2rem;
+  right: 2.5rem;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px dashed var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-12deg);
+  color: var(--primary-dark);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.9);
+}

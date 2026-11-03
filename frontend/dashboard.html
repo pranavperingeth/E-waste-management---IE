@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Client Dashboard — EcoVolt™ Smart E-Waste Portal</title>
+  <title>Consumer Green Portal — EcoVolt™</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -18,89 +18,127 @@
 
       <div class="nav-actions">
         <a href="/" class="btn btn-outline btn-sm">Home</a>
+        <a href="/admin.html" class="btn btn-outline btn-sm" style="color: var(--slate-700); font-weight: 700;">⚙️ Admin Center</a>
         <button onclick="logout()" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: var(--danger-border);">Logout</button>
       </div>
     </nav>
   </header>
 
-  <!-- Dashboard Container -->
+  <!-- Consumer Dashboard Container -->
   <main class="container dashboard-container">
     <div class="dashboard-header">
       <div class="dashboard-title">
+        <div class="badge badge-primary" style="margin-bottom: 0.5rem;">Consumer Account</div>
         <h1>Welcome, <span id="userName" style="color: var(--primary);">...</span> 👋</h1>
-        <p id="userPhone" style="margin-top: 0.25rem; font-weight: 500;"></p>
+        <p id="userPhone" style="margin-top: 0.25rem; font-weight: 500; color: var(--slate-600);"></p>
       </div>
-      <div>
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button onclick="openCertificateModal()" class="btn btn-outline" id="certBtn" style="border-color: var(--primary-border); color: var(--primary-dark);">
+          📜 View Green Certificate
+        </button>
         <a href="https://web.whatsapp.com" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp">
-          💬 Open WhatsApp Chatbot
+          💬 Chat with Bot (BOOK)
         </a>
       </div>
     </div>
 
-    <!-- Quick Stats Cards -->
+    <!-- Environmental Impact Scorecard -->
     <div class="dashboard-stats">
       <div class="dash-stat-card">
-        <div class="dash-stat-icon icon-green">📦</div>
+        <div class="dash-stat-icon icon-green">🌱</div>
         <div class="dash-stat-info">
-          <h4>Total Pickups</h4>
-          <span id="statTotal">0</span>
+          <h4>E-Waste Diverted</h4>
+          <span id="statDivertedKg">0.0 kg</span>
         </div>
       </div>
 
       <div class="dash-stat-card">
-        <div class="dash-stat-icon icon-orange">⏳</div>
+        <div class="dash-stat-icon icon-blue">☁️</div>
         <div class="dash-stat-info">
-          <h4>Pending Collections</h4>
-          <span id="statPending">0</span>
+          <h4>CO₂ Avoided</h4>
+          <span id="statCo2Kg">0.0 kg</span>
         </div>
       </div>
 
       <div class="dash-stat-card">
-        <div class="dash-stat-icon icon-blue">🌿</div>
+        <div class="dash-stat-icon icon-orange">📦</div>
         <div class="dash-stat-info">
-          <h4>Completed & Recycled</h4>
-          <span id="statCompleted">0</span>
+          <h4>Active Pickups</h4>
+          <span id="statActivePickups">0</span>
         </div>
       </div>
     </div>
 
-    <!-- Bot Instruction Banner -->
-    <div class="panel" style="background: linear-gradient(135deg, #f0fdf4, #ffffff); border-color: var(--primary-border);">
+    <!-- Active Pickup Progress Tracker (Stepper) -->
+    <div class="panel" id="stepperPanel" style="display: none;">
+      <div class="panel-header">
+        <div>
+          <h2>Latest Pickup Status: <span id="latestRef" style="font-family: var(--font-mono); color: var(--primary);"></span></h2>
+          <span id="latestCategoryText" style="font-size: 0.85rem; color: var(--slate-500);"></span>
+        </div>
+        <span id="latestStatusBadge" class="status-badge"></span>
+      </div>
+
+      <div class="stepper-container">
+        <div class="stepper-step" id="step1">
+          <div class="step-icon-bubble">1</div>
+          <div class="step-label">Request Received</div>
+        </div>
+        <div class="stepper-step" id="step2">
+          <div class="step-icon-bubble">2</div>
+          <div class="step-label">Dispatched</div>
+        </div>
+        <div class="stepper-step" id="step3">
+          <div class="step-icon-bubble">3</div>
+          <div class="step-label">Collected</div>
+        </div>
+        <div class="stepper-step" id="step4">
+          <div class="step-icon-bubble">4</div>
+          <div class="step-label">Green Recycled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How to Schedule Card -->
+    <div class="panel" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border-color: var(--primary-border);">
       <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;">
         <div style="font-size: 2.2rem;">📱</div>
         <div style="flex-grow: 1;">
           <h3 style="color: var(--slate-900); font-size: 1.15rem; margin-bottom: 0.35rem;">
-            Ready to schedule or reschedule an e-waste collection?
+            Need to schedule an e-waste pickup?
           </h3>
           <p style="color: var(--slate-600); font-size: 0.95rem;">
-            Open WhatsApp from your phone or desktop, and text <strong>BOOK</strong> to our recycling bot.
-            The bot will guide you through category selection, pickup address, and preferred time window.
+            Simply text <strong>BOOK</strong> to our WhatsApp bot from your registered phone.
+            Our bot will ask what you are recycling, your quantity, and your pickup window.
           </p>
         </div>
         <div>
-          <a href="/#whatsapp-demo" class="btn btn-outline btn-sm">View Command List</a>
+          <a href="https://web.whatsapp.com" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-sm">
+            Launch WhatsApp Bot
+          </a>
         </div>
       </div>
     </div>
 
-    <!-- Bookings Table Panel -->
+    <!-- Responsive Bookings Table (Accessible & Container-Query Stacked) -->
     <div class="panel">
       <div class="panel-header">
-        <h2>Your E-Waste Bookings</h2>
-        <span class="badge badge-primary">Real-Time Sync</span>
+        <h2 id="bookings-heading">Your Recycling History</h2>
+        <span class="badge badge-primary">Synchronized Real-Time</span>
       </div>
 
       <div id="bookingsMsg"></div>
 
-      <div class="table-wrap">
-        <table class="data-table">
+      <div tabindex="0" role="region" aria-labelledby="bookings-heading" class="table-wrapper">
+        <table>
           <thead>
             <tr>
-              <th>Reference ID</th>
-              <th>Category</th>
-              <th>Quantity</th>
-              <th>Pickup Date</th>
-              <th>Status</th>
+              <th scope="col">Booking Ref</th>
+              <th scope="col">Category</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Pickup Address</th>
+              <th scope="col">Scheduled Date</th>
+              <th scope="col">Status</th>
             </tr>
           </thead>
           <tbody id="bookingsBody">
@@ -113,7 +151,7 @@
         <div style="font-size: 3rem; margin-bottom: 0.5rem;">📦</div>
         <h3 style="color: var(--slate-800); margin-bottom: 0.5rem;">No pickups booked yet</h3>
         <p style="color: var(--slate-500); max-width: 450px; margin: 0 auto 1.5rem; font-size: 0.95rem;">
-          Your booking history is empty. Text <strong>BOOK</strong> on WhatsApp to arrange your first pickup!
+          Your e-waste recycling ledger is empty. Text <strong>BOOK</strong> on WhatsApp to arrange your first collection!
         </p>
         <a href="https://web.whatsapp.com" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-sm">
           💬 Send "BOOK" on WhatsApp
@@ -121,6 +159,57 @@
       </div>
     </div>
   </main>
+
+  <!-- Digital Green Certificate Modal -->
+  <div class="modal-overlay" id="certModal">
+    <div class="modal-card">
+      <div class="certificate-frame">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🌿</div>
+        <h2 style="font-size: 1.6rem; color: #064e3b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem;">
+          Certificate of Green Stewardship
+        </h2>
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 1.5rem;">
+          Issued by EcoVolt™ Technologies • CPCB Authorized E-Waste Handler
+        </div>
+
+        <p style="font-size: 0.95rem; color: var(--slate-700); margin-bottom: 1.5rem;">
+          This certifies that
+        </p>
+
+        <h3 id="certUserName" style="font-size: 1.8rem; color: var(--slate-900); font-weight: 800; border-bottom: 2px solid var(--slate-200); display: inline-block; padding-bottom: 0.25rem; margin-bottom: 1.25rem;">
+          ...
+        </h3>
+
+        <p style="font-size: 0.95rem; color: var(--slate-700); max-width: 460px; margin: 0 auto 1.5rem; line-height: 1.6;">
+          has contributed to certified circular electronics recycling, diverting hazardous toxic components from landfills and preserving critical earth minerals.
+        </p>
+
+        <div style="display: flex; justify-content: space-around; background: var(--white); padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--slate-200); margin-bottom: 1.5rem;">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase;">Total Units</div>
+            <div id="certUnits" style="font-weight: 800; color: var(--primary-dark); font-size: 1.2rem;">0</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase;">Est. Avoided CO₂</div>
+            <div id="certCo2" style="font-weight: 800; color: var(--primary-dark); font-size: 1.2rem;">0 kg</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase;">Verification</div>
+            <div style="font-weight: 800; color: var(--slate-800); font-size: 0.9rem;">VERIFIED</div>
+          </div>
+        </div>
+
+        <div class="cert-stamp">
+          ECOVOLT<br>CERTIFIED<br>2026
+        </div>
+      </div>
+
+      <div style="padding: 1rem 1.5rem; background: var(--slate-50); display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print Certificate</button>
+        <button onclick="closeCertificateModal()" class="btn btn-outline btn-sm">Close</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer" style="padding: 2rem 0; margin-top: auto;">
     <div class="container" style="text-align: center; font-size: 0.85rem; color: var(--slate-500);">
@@ -130,32 +219,82 @@
 
   <script src="/app.js"></script>
   <script>
+    let userBookingsCache = [];
+
     if (!requireAuth()) {
-      // requireAuth redirects automatically
+      // Handled by auth guard
     } else {
       loadDashboard();
     }
 
     async function loadDashboard() {
       try {
-        // Fetch user profile
         const user = await apiFetch("/me");
         document.getElementById("userName").textContent = user.full_name;
+        document.getElementById("certUserName").textContent = user.full_name;
         setUserName(user.full_name);
         document.getElementById("userPhone").textContent = "WhatsApp ID: +" + user.whatsapp_number;
 
-        // Fetch user bookings
         const bookings = await apiFetch("/my-bookings");
+        userBookingsCache = bookings;
         const tbody = document.getElementById("bookingsBody");
         const noBookings = document.getElementById("noBookings");
 
-        // Update stats
-        document.getElementById("statTotal").textContent = bookings.length;
-        const pendingCount = bookings.filter(b => b.status === "PENDING" || b.status === "CONFIRMED").length;
-        const completedCount = bookings.filter(b => b.status === "PICKED_UP").length;
-        document.getElementById("statPending").textContent = pendingCount;
-        document.getElementById("statCompleted").textContent = completedCount;
+        // Calculate Environmental Impact Scorecard
+        let totalItems = 0;
+        let divertedKg = 0;
+        let co2AvoidedKg = 0;
+        let activeCount = 0;
 
+        bookings.forEach(b => {
+          const qty = b.quantity || 1;
+          totalItems += qty;
+
+          if (b.status === "PENDING" || b.status === "CONFIRMED") {
+            activeCount++;
+          }
+
+          // Dynamic calculation model
+          const cat = (b.item_category || "").toLowerCase();
+          if (cat.includes("laptop")) {
+            divertedKg += qty * 2.5;
+            co2AvoidedKg += qty * 35.0;
+          } else if (cat.includes("phone")) {
+            divertedKg += qty * 0.2;
+            co2AvoidedKg += qty * 12.0;
+          } else if (cat.includes("battery")) {
+            divertedKg += qty * 0.8;
+            co2AvoidedKg += qty * 8.5;
+          } else if (cat.includes("appliance")) {
+            divertedKg += qty * 8.0;
+            co2AvoidedKg += qty * 45.0;
+          } else {
+            divertedKg += qty * 0.5;
+            co2AvoidedKg += qty * 5.0;
+          }
+        });
+
+        document.getElementById("statDivertedKg").textContent = `${divertedKg.toFixed(1)} kg`;
+        document.getElementById("statCo2Kg").textContent = `${co2AvoidedKg.toFixed(1)} kg`;
+        document.getElementById("statActivePickups").textContent = activeCount;
+        document.getElementById("certUnits").textContent = totalItems;
+        document.getElementById("certCo2").textContent = `${co2AvoidedKg.toFixed(0)} kg`;
+
+        // Update latest pickup progression stepper
+        if (bookings.length > 0) {
+          const latest = bookings[0];
+          document.getElementById("stepperPanel").style.display = "block";
+          document.getElementById("latestRef").textContent = latest.booking_ref;
+          document.getElementById("latestCategoryText").textContent = `${latest.item_category} (${latest.quantity} unit${latest.quantity > 1 ? "s" : ""})`;
+          
+          const statusBadge = document.getElementById("latestStatusBadge");
+          statusBadge.textContent = latest.status;
+          statusBadge.className = `status-badge status-${latest.status.toLowerCase()}`;
+
+          updateStepper(latest.status);
+        }
+
+        // Populate table
         if (bookings.length === 0) {
           noBookings.style.display = "block";
         } else {
@@ -171,11 +310,14 @@
 
               return `
                 <tr>
-                  <td><strong style="color: var(--slate-900); font-family: var(--font-mono);">${escapeHtml(b.booking_ref)}</strong></td>
-                  <td>${escapeHtml(b.item_category)}</td>
-                  <td>${b.quantity} item${b.quantity > 1 ? "s" : ""}</td>
-                  <td>${formattedDate}</td>
-                  <td><span class="status-badge ${statusClass}">${escapeHtml(b.status)}</span></td>
+                  <th scope="row" data-label="Booking Ref" style="font-family: var(--font-mono); font-weight: 700; color: var(--slate-900);">
+                    ${escapeHtml(b.booking_ref)}
+                  </th>
+                  <td data-label="Category">${escapeHtml(b.item_category)}</td>
+                  <td data-label="Quantity">${b.quantity}</td>
+                  <td data-label="Address" style="max-width: 250px; white-space: normal;">${escapeHtml(b.pickup_address)}</td>
+                  <td data-label="Date">${formattedDate}</td>
+                  <td data-label="Status"><span class="status-badge ${statusClass}">${escapeHtml(b.status)}</span></td>
                 </tr>
               `;
             })
@@ -189,6 +331,38 @@
         }
         showMessage("bookingsMsg", err.message, "error");
       }
+    }
+
+    function updateStepper(status) {
+      const s1 = document.getElementById("step1");
+      const s2 = document.getElementById("step2");
+      const s3 = document.getElementById("step3");
+      const s4 = document.getElementById("step4");
+
+      // Reset
+      [s1, s2, s3, s4].forEach(s => s.className = "stepper-step");
+
+      if (status === "PENDING") {
+        s1.className = "stepper-step current";
+      } else if (status === "CONFIRMED") {
+        s1.className = "stepper-step completed";
+        s2.className = "stepper-step current";
+      } else if (status === "PICKED_UP") {
+        s1.className = "stepper-step completed";
+        s2.className = "stepper-step completed";
+        s3.className = "stepper-step completed";
+        s4.className = "stepper-step completed";
+      } else if (status === "CANCELLED") {
+        s1.className = "stepper-step";
+      }
+    }
+
+    function openCertificateModal() {
+      document.getElementById("certModal").style.display = "flex";
+    }
+
+    function closeCertificateModal() {
+      document.getElementById("certModal").style.display = "none";
     }
   </script>
 </body>
