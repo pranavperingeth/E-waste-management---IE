@@ -1,114 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connect WhatsApp Bot - E-Waste Portal</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connect WhatsApp Bot — EcoVolt™ Portal</title>
+  <link rel="stylesheet" href="/style.css" />
   <style>
     .qr-container {
       text-align: center;
-      margin: 20px 0;
+      margin: 1.5rem 0;
     }
     .qr-box {
-      width: 280px;
-      height: 280px;
+      width: 290px;
+      height: 290px;
       margin: 0 auto;
-      border: 2px dashed var(--border);
-      border-radius: var(--radius);
+      border: 2px dashed var(--slate-300);
+      border-radius: var(--radius-lg);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #fafafa;
+      background: var(--slate-50);
       position: relative;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
     }
     .qr-box img {
       max-width: 100%;
       max-height: 100%;
-      border-radius: 4px;
+      border-radius: var(--radius-md);
     }
-    .status-badge {
-      display: inline-block;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    .status-connecting {
-      background: #fff3e0;
-      color: #e65100;
-    }
-    .status-open {
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-    .status-close {
-      background: #ffebee;
-      color: #c62828;
-    }
-    .instructions {
+    .instructions-card {
+      background: var(--primary-subtle);
+      border: 1px solid var(--primary-border);
+      padding: 1.25rem 1.5rem;
+      border-radius: var(--radius-md);
+      margin-top: 1.5rem;
       text-align: left;
-      background: #f1f8e9;
-      padding: 16px;
-      border-radius: var(--radius);
-      margin-top: 20px;
-      font-size: 14px;
-      line-height: 1.6;
+      font-size: 0.9rem;
+      color: var(--slate-700);
     }
-    .instructions ol {
-      margin-left: 20px;
-      margin-top: 8px;
+    .instructions-card ol {
+      margin-left: 1.25rem;
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
     }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="nav-brand">♻️ E-Waste Bot WhatsApp Linker</div>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="register.html">Register</a>
-      <a href="dashboard.html">Dashboard</a>
-    </div>
-  </nav>
 
-  <div class="container">
-    <div class="card" style="max-width: 520px;">
-      <h2 style="text-align: center; margin-bottom: 10px;">Link WhatsApp Bot</h2>
-      <p style="text-align: center; color: var(--text-light); font-size: 14px; margin-bottom: 16px;">
-        Scan this QR code with WhatsApp on the <strong>bot's dedicated phone</strong>
-      </p>
+  <!-- Navigation -->
+  <header>
+    <nav class="navbar">
+      <a href="/" class="brand">
+        <div class="brand-icon">♻️</div>
+        <span>EcoVolt<span style="color: var(--primary);">.</span></span>
+      </a>
 
-      <div style="text-align: center;">
-        <span id="connection-status" class="status-badge status-connecting">Checking connection...</span>
+      <div class="nav-actions">
+        <a href="/" class="btn btn-outline btn-sm">Home</a>
+        <a href="/register.html" class="btn btn-outline btn-sm">Register</a>
+        <a href="/dashboard.html" class="btn btn-primary btn-sm">Dashboard</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="auth-wrapper">
+    <div class="auth-card" style="max-width: 520px;">
+      <div class="auth-header">
+        <div class="badge badge-primary" style="margin-bottom: 0.5rem;">Admin / Bot Setup</div>
+        <h1>Link WhatsApp Bot</h1>
+        <p>Scan with WhatsApp on the <strong>bot's dedicated phone</strong>.</p>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 1rem;">
+        <span id="connection-status" class="status-badge status-pending" style="font-size: 0.85rem; padding: 0.4rem 1rem;">
+          Checking connection...
+        </span>
       </div>
 
       <div class="qr-container">
         <div id="qr-box" class="qr-box">
-          <span style="color: #888;">Generating QR code...</span>
+          <span style="color: var(--slate-500); font-size: 0.9rem;">Connecting to Evolution API...</span>
         </div>
       </div>
 
-      <p id="timer" style="text-align: center; font-size: 13px; color: var(--text-light);">
+      <p id="timer" style="text-align: center; font-size: 0.8rem; color: var(--slate-400);">
         Auto-refreshes every 8 seconds
       </p>
 
-      <div class="instructions">
-        <strong>📱 How to scan:</strong>
+      <div class="instructions-card">
+        <strong>📱 How to Link:</strong>
         <ol>
-          <li>Open WhatsApp on your <strong>bot's phone / spare SIM</strong>.</li>
-          <li>Tap <strong>Settings</strong> (or three dots ⋮) &rarr; <strong>Linked Devices</strong>.</li>
+          <li>Open WhatsApp on the <strong>spare phone</strong> dedicated to the bot.</li>
+          <li>Tap <strong>Settings</strong> (or ⋮ menu) &rarr; <strong>Linked Devices</strong>.</li>
           <li>Tap <strong>Link a Device</strong>.</li>
-          <li>Point your phone camera at the QR code above.</li>
+          <li>Point your camera at the QR code above.</li>
         </ol>
       </div>
 
-      <div id="success-banner" style="display: none; margin-top: 16px; padding: 14px; background: #e8f5e9; border: 1px solid #81c784; border-radius: 6px; text-align: center; color: #2e7d32; font-weight: 600;">
-        🎉 WhatsApp Bot Connected Successfully! You can now register on the portal and test chatting with the bot.
+      <div id="success-banner" style="display: none; margin-top: 1.25rem; padding: 1rem; background: var(--primary-subtle); border: 1px solid var(--primary-border); border-radius: var(--radius-md); text-align: center; color: var(--primary-dark); font-weight: 600;">
+        🎉 WhatsApp Bot Connected Successfully! You can now register and test the bot flow.
       </div>
     </div>
-  </div>
+  </main>
 
+  <footer class="footer" style="padding: 2rem 0; margin-top: auto;">
+    <div class="container" style="text-align: center; font-size: 0.85rem; color: var(--slate-500);">
+      &copy; 2026 EcoVolt™ Smart E-Waste Management Portal. Certified E-Waste Handler.
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
   <script>
     const API_KEY = "change_me_long_random_uuid";
     const EVOLUTION_URL = "http://localhost:8080";
@@ -121,7 +125,6 @@
       if (isConnected) return;
 
       try {
-        // 1. Check instance connection status
         const stateRes = await fetch(`${EVOLUTION_URL}/instance/connectionState/ewaste-bot`, {
           headers: { "apikey": API_KEY }
         });
@@ -131,13 +134,12 @@
         if (state === "open") {
           isConnected = true;
           statusBadge.textContent = "CONNECTED (open)";
-          statusBadge.className = "status-badge status-open";
-          qrBox.innerHTML = '<div style="color: #2e7d32; font-size: 48px;">✅</div><p style="margin-top: 8px; color: #2e7d32; font-weight: bold;">WhatsApp Connected!</p>';
+          statusBadge.className = "status-badge status-picked_up";
+          qrBox.innerHTML = '<div style="color: var(--primary); font-size: 54px;">✅</div><p style="margin-top: 8px; color: var(--primary-dark); font-weight: bold;">WhatsApp Connected!</p>';
           successBanner.style.display = "block";
           return;
         }
 
-        // 2. Fetch QR code
         const connectRes = await fetch(`${EVOLUTION_URL}/instance/connect/ewaste-bot`, {
           headers: { "apikey": API_KEY }
         });
@@ -145,23 +147,20 @@
 
         if (connectData.base64) {
           statusBadge.textContent = "Ready to Scan";
-          statusBadge.className = "status-badge status-connecting";
+          statusBadge.className = "status-badge status-confirmed";
           qrBox.innerHTML = `<img src="${connectData.base64}" alt="WhatsApp QR Code" />`;
         } else if (connectData.count === 0) {
           statusBadge.textContent = "Connecting to WhatsApp servers...";
-          statusBadge.className = "status-badge status-connecting";
+          statusBadge.className = "status-badge status-pending";
         }
       } catch (err) {
-        statusBadge.textContent = "Offline / Error";
-        statusBadge.className = "status-badge status-close";
-        qrBox.innerHTML = '<span style="color: red; font-size: 13px;">Error fetching QR. Ensure Evolution API is running.</span>';
+        statusBadge.textContent = "Offline / Connection Error";
+        statusBadge.className = "status-badge status-cancelled";
+        qrBox.innerHTML = '<span style="color: var(--danger); font-size: 0.85rem;">Error fetching QR. Ensure Evolution API is running.</span>';
       }
     }
 
-    // Initial check
     checkStatusAndQR();
-
-    // Auto-refresh every 8s
     setInterval(checkStatusAndQR, 8000);
   </script>
 </body>

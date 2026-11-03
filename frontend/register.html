@@ -3,69 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Register — E-Waste Portal</title>
+  <title>Create Account — EcoVolt™ Smart E-Waste Portal</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <h1>♻️ E-Waste Portal</h1>
-    <div>
-      <a href="/">Home</a>
-      <a href="/login.html">Login</a>
+
+  <!-- Navigation -->
+  <header>
+    <nav class="navbar">
+      <a href="/" class="brand">
+        <div class="brand-icon">♻️</div>
+        <span>EcoVolt<span style="color: var(--primary);">.</span></span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="/" class="btn btn-outline btn-sm">Home</a>
+        <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Registration Card Form -->
+  <main class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="badge badge-primary" style="margin-bottom: 0.75rem;">
+          🌱 100% Free Doorstep Pickup
+        </div>
+        <h1>Create Your Account</h1>
+        <p>Register once to enable WhatsApp bot pickup scheduling.</p>
+      </div>
+
+      <div id="msg"></div>
+
+      <form id="registerForm" novalidate>
+        <!-- Full Name -->
+        <div class="form-group">
+          <label class="form-label" for="full_name">Full Name</label>
+          <input
+            type="text"
+            id="full_name"
+            class="form-control"
+            required
+            autocomplete="name"
+            placeholder="e.g. John Doe"
+          />
+          <div class="form-error">Please enter your full name.</div>
+        </div>
+
+        <!-- Email Address -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <span id="email-hint" class="form-hint">Format: you@example.com (used for login & receipts)</span>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            required
+            autocomplete="email"
+            placeholder="you@example.com"
+            aria-describedby="email-hint"
+          />
+          <div class="form-error">Please enter a valid email address.</div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <span id="password-hint" class="form-hint">Minimum 8 characters</span>
+          <input
+            type="password"
+            id="password"
+            class="form-control"
+            required
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="••••••••"
+            aria-describedby="password-hint"
+          />
+          <div class="form-error">Password must be at least 8 characters.</div>
+        </div>
+
+        <!-- WhatsApp Phone Number -->
+        <div class="form-group">
+          <label class="form-label" for="whatsapp_number">WhatsApp Phone Number</label>
+          <span id="phone-hint" class="form-hint">Include country code without "+" (e.g. 919876543210 for India)</span>
+          <input
+            type="tel"
+            id="whatsapp_number"
+            class="form-control"
+            required
+            autocomplete="tel"
+            placeholder="919876543210"
+            aria-describedby="phone-hint"
+          />
+          <div class="form-error">Please enter a valid WhatsApp number with country code.</div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+          🚀 Register & Connect WhatsApp
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--slate-500);">
+        Already have an account? <a href="/login.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign In</a>
+      </div>
     </div>
-  </nav>
+  </main>
 
-  <!-- Registration form -->
-  <div class="card">
-    <h2>Create Account</h2>
-    <p>Register to start using our WhatsApp bot for e-waste pickups.</p>
-
-    <div id="msg"></div>
-
-    <form id="registerForm">
-      <div class="form-group">
-        <label for="full_name">Full Name</label>
-        <input type="text" id="full_name" required placeholder="Your full name" />
-      </div>
-
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" required placeholder="you@example.com" />
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" required minlength="8" placeholder="At least 8 characters" />
-      </div>
-
-      <div class="form-group">
-        <label for="whatsapp_number">WhatsApp Number</label>
-        <input type="tel" id="whatsapp_number" required placeholder="+91 98765 43210" />
-        <div class="hint">Include country code, e.g. +91 for India</div>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Register</button>
-    </form>
-  </div>
-
-  <div class="footer">
-    Smart E-Waste Management Portal &mdash; Prototype
-  </div>
+  <footer class="footer" style="padding: 2rem 0; margin-top: auto;">
+    <div class="container" style="text-align: center; font-size: 0.85rem; color: var(--slate-500);">
+      &copy; 2026 EcoVolt™ Smart E-Waste Management Portal. Certified E-Waste Handler.
+    </div>
+  </footer>
 
   <script src="/app.js"></script>
   <script>
-    // ---------------------------------------------------------------
-    // Registration page logic:
-    //   1. On form submit, POST to /api/register with the 4 fields.
-    //   2. On success (201), show a green message telling the user
-    //      to check WhatsApp for the welcome message.
-    //   3. On error (400 validation, 409 duplicate, 429 rate limit),
-    //      show the server's error message in red.
-    // ---------------------------------------------------------------
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    const registerForm = document.getElementById("registerForm");
+    const submitBtn = document.getElementById("submitBtn");
+
+    registerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       clearMessage("msg");
+
+      // Check form validity before submission
+      if (!registerForm.checkValidity()) {
+        // Trigger native constraint validation display
+        registerForm.reportValidity();
+        return;
+      }
 
       const body = {
         full_name: document.getElementById("full_name").value.trim(),
@@ -74,15 +140,40 @@
         whatsapp_number: document.getElementById("whatsapp_number").value.trim(),
       };
 
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Creating Account...";
+
       try {
-        const data = await apiFetch("/register", {
+        // 1. Register user
+        const res = await apiFetch("/register", {
           method: "POST",
           body: JSON.stringify(body),
         });
-        showMessage("msg", data.message, "success");
-        document.getElementById("registerForm").reset();
+
+        // 2. Automatically log them in to get JWT token
+        try {
+          const loginRes = await apiFetch("/login", {
+            method: "POST",
+            body: JSON.stringify({
+              email: body.email,
+              password: body.password,
+            }),
+          });
+          if (loginRes.token) {
+            setToken(loginRes.token);
+            setUserName(body.full_name);
+          }
+        } catch (loginErr) {
+          console.warn("Auto-login bypassed:", loginErr.message);
+        }
+
+        // 3. Redirect immediately to the Company Homepage with welcome celebration
+        window.location.href = `/?registered=true&name=${encodeURIComponent(body.full_name)}`;
+
       } catch (err) {
         showMessage("msg", err.message, "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "🚀 Register & Connect WhatsApp";
       }
     });
   </script>

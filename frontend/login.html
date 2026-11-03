@@ -3,73 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login — E-Waste Portal</title>
+  <title>Sign In — EcoVolt™ Smart E-Waste Portal</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <h1>♻️ E-Waste Portal</h1>
-    <div>
-      <a href="/">Home</a>
-      <a href="/register.html">Register</a>
+
+  <!-- Navigation -->
+  <header>
+    <nav class="navbar">
+      <a href="/" class="brand">
+        <div class="brand-icon">♻️</div>
+        <span>EcoVolt<span style="color: var(--primary);">.</span></span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="/" class="btn btn-outline btn-sm">Home</a>
+        <a href="/register.html" class="btn btn-primary btn-sm">Create Account</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Login Card Form -->
+  <main class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>Welcome Back</h1>
+        <p>Sign in to view your pickup history and portal dashboard.</p>
+      </div>
+
+      <div id="msg"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            required
+            autocomplete="email"
+            placeholder="you@example.com"
+          />
+          <div class="form-error">Please enter a valid email.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            class="form-control"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+          <div class="form-error">Please enter your password.</div>
+        </div>
+
+        <button type="submit" id="loginBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+          Sign In
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--slate-500);">
+        Don't have an account? <a href="/register.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Create one here</a>
+      </div>
     </div>
-  </nav>
+  </main>
 
-  <!-- Login form -->
-  <div class="card">
-    <h2>Login</h2>
-    <p>Sign in to view your dashboard and bookings.</p>
-
-    <div id="msg"></div>
-
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" required placeholder="you@example.com" />
-      </div>
-
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" required placeholder="Your password" />
-      </div>
-
-      <button type="submit" class="btn btn-primary">Login</button>
-    </form>
-  </div>
-
-  <div class="footer">
-    Smart E-Waste Management Portal &mdash; Prototype
-  </div>
+  <footer class="footer" style="padding: 2rem 0; margin-top: auto;">
+    <div class="container" style="text-align: center; font-size: 0.85rem; color: var(--slate-500);">
+      &copy; 2026 EcoVolt™ Smart E-Waste Management Portal. Certified E-Waste Handler.
+    </div>
+  </footer>
 
   <script src="/app.js"></script>
   <script>
-    // ---------------------------------------------------------------
-    // Login page logic:
-    //   1. On form submit, POST to /api/login with email + password.
-    //   2. On success, store the JWT in localStorage and redirect
-    //      to the dashboard.
-    //   3. On error (401 wrong creds, 429 rate limit), show the
-    //      error message.
-    // ---------------------------------------------------------------
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    const loginForm = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
+
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       clearMessage("msg");
+
+      if (!loginForm.checkValidity()) {
+        loginForm.reportValidity();
+        return;
+      }
 
       const body = {
         email: document.getElementById("email").value.trim(),
         password: document.getElementById("password").value,
       };
 
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Signing In...";
+
       try {
         const data = await apiFetch("/login", {
           method: "POST",
           body: JSON.stringify(body),
         });
+
         setToken(data.token);
+
+        // Fetch user profile to cache full name for navbar
+        try {
+          const me = await apiFetch("/me");
+          if (me.full_name) setUserName(me.full_name);
+        } catch (_) {}
+
         window.location.href = "/dashboard.html";
       } catch (err) {
         showMessage("msg", err.message, "error");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Sign In";
       }
     });
   </script>

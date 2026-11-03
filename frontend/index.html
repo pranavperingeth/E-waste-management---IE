@@ -3,36 +3,411 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart E-Waste Portal</title>
+  <title>EcoVolt™ — Smart E-Waste Management & Green Recycling</title>
+  <meta name="description" content="Certified, safe doorstep e-waste recycling powered by automated WhatsApp scheduling. Zero landfill guarantee." />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <h1>♻️ E-Waste Portal</h1>
-    <div>
-      <a href="/qr.html" style="color: #ffd54f; font-weight: 600; margin-right: 12px;">📱 Link Bot</a>
-      <a href="/register.html">Register</a>
-      <a href="/login.html">Login</a>
+
+  <!-- ================= Navigation ================= -->
+  <header>
+    <nav class="navbar">
+      <a href="/" class="brand">
+        <div class="brand-icon">♻️</div>
+        <span>EcoVolt<span style="color: var(--primary);">.</span></span>
+      </a>
+
+      <ul class="nav-menu">
+        <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+        <li><a href="#categories" class="nav-link">Accepted E-Waste</a></li>
+        <li><a href="#impact" class="nav-link">Our Impact</a></li>
+        <li><a href="#whatsapp-demo" class="nav-link">WhatsApp Bot</a></li>
+      </ul>
+
+      <div class="nav-actions" id="navActions">
+        <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="/register.html" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Dynamic Celebration Banner (Rendered when redirected after registration) -->
+    <div class="container" id="celebrateContainer" style="display: none;">
+      <div class="celebrate-banner">
+        <div class="celebrate-icon">🎉</div>
+        <div class="celebrate-body">
+          <h2 id="celebrateTitle">Welcome to EcoVolt, Explorer!</h2>
+          <p id="celebrateDesc">
+            Your registration is confirmed! We have dispatched a <strong>WhatsApp welcome message</strong> to your registered number.
+            Simply check your phone and reply <strong>BOOK</strong> to schedule your doorstep e-waste pickup anytime.
+          </p>
+          <div class="celebrate-actions">
+            <a href="https://web.whatsapp.com" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-sm">
+              💬 Open WhatsApp Web
+            </a>
+            <a href="/dashboard.html" class="btn btn-primary btn-sm">
+              📋 Go to Dashboard
+            </a>
+            <button onclick="dismissCelebrate()" class="btn btn-outline btn-sm">
+              Explore Services
+            </button>
+          </div>
+        </div>
+        <button class="celebrate-close" onclick="dismissCelebrate()" aria-label="Close notification">&times;</button>
+      </div>
     </div>
-  </nav>
 
-  <!-- Hero section -->
-  <div class="card wide hero">
-    <h2>Smart E-Waste Management</h2>
-    <p>
-      Register once on this website, then use our WhatsApp bot to schedule
-      e-waste pickups — phones, laptops, batteries, cables, and more.
-    </p>
-    <a href="/register.html" class="btn btn-primary" style="max-width:200px; display:inline-block;">Register</a>
-    <a href="/login.html" class="btn btn-outline" style="max-width:200px; display:inline-block;">Login</a>
-  </div>
+    <!-- ================= Hero Section ================= -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-content">
+            <div class="badge badge-primary">
+              🌱 CPCB-Authorized Green Recycler
+            </div>
+            <h1>
+              Responsible Electronics Recycling <span>At Your Doorstep</span>
+            </h1>
+            <p class="hero-description">
+              Turn old laptops, dead batteries, and obsolete gadgets into certified green impact. Register once on our portal, then schedule safe doorstep pickups directly through <strong>WhatsApp in under 60 seconds</strong>.
+            </p>
+            <div class="hero-actions">
+              <a href="/register.html" class="btn btn-primary">
+                🚀 Schedule Free Pickup
+              </a>
+              <a href="#whatsapp-demo" class="btn btn-outline">
+                📱 See WhatsApp Bot
+              </a>
+            </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    Smart E-Waste Management Portal &mdash; Prototype
-  </div>
+            <div class="hero-trust">
+              <div class="trust-item">
+                <span>🔒</span> Zero-Landfill Policy
+              </div>
+              <div class="trust-item">
+                <span>📜</span> DoD Data Destruction
+              </div>
+              <div class="trust-item">
+                <span>🚚</span> 100% Free Doorstep Pickup
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive WhatsApp Mockup Preview -->
+          <div class="hero-mockup">
+            <div class="phone-mockup">
+              <div class="phone-header">
+                <div class="phone-avatar">🤖</div>
+                <div>
+                  <div style="font-weight: 700; font-size: 0.95rem;">EcoVolt Assistant</div>
+                  <div style="font-size: 0.75rem; opacity: 0.85;">Online • Official Verified Bot</div>
+                </div>
+              </div>
+              <div class="phone-chat">
+                <div class="chat-bubble bubble-bot">
+                  👋 <strong>Hello! Welcome to EcoVolt E-Waste.</strong><br>
+                  We ensure your electronics are responsibly recycled.<br><br>
+                  Send <strong>BOOK</strong> anytime to arrange a free pickup!
+                </div>
+                <div class="chat-bubble bubble-user">
+                  BOOK
+                </div>
+                <div class="chat-bubble bubble-bot">
+                  📦 <strong>What are you recycling today?</strong><br>
+                  Reply with a number:<br>
+                  1️⃣ Phone / Tablet<br>
+                  2️⃣ Laptop / PC<br>
+                  3️⃣ Batteries & UPS<br>
+                  4️⃣ Home Appliances<br>
+                  5️⃣ Cables & Chargers
+                </div>
+                <div class="chat-bubble bubble-user">
+                  2
+                </div>
+                <div class="chat-bubble bubble-bot">
+                  ✅ Category: <strong>Laptop</strong>.<br>
+                  How many units do you have? (1-50)
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Impact Counter ================= -->
+    <section class="stats-section" id="impact">
+      <div class="container">
+        <div class="stats-grid">
+          <div>
+            <div class="stat-num">52,400+</div>
+            <div class="stat-label">KG E-Waste Recycled</div>
+          </div>
+          <div>
+            <div class="stat-num">18,250+</div>
+            <div class="stat-label">Doorstep Pickups Fulfilled</div>
+          </div>
+          <div>
+            <div class="stat-num">100%</div>
+            <div class="stat-label">Certified Data Destruction</div>
+          </div>
+          <div>
+            <div class="stat-num">98.6%</div>
+            <div class="stat-label">Material Recovery Rate</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= How It Works ================= -->
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="badge badge-primary">Frictionless Process</span>
+          <h2>How EcoVolt Works</h2>
+          <p>No clunky mobile apps to install or complex phone queues. Powered by autonomous WhatsApp automation.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>Quick Registration</h3>
+            <p>Create an account on our website with your WhatsApp number. Takes less than 30 seconds.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>WhatsApp Handshake</h3>
+            <p>Our intelligent WhatsApp bot immediately greets you on WhatsApp with clear instructions.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>Text "BOOK"</h3>
+            <p>Reply with your gadget category, quantity, address, and preferred pickup date.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <h3>Green Doorstep Pickup</h3>
+            <p>Our certified logistics partner collects the items and safely transports them to authorized recycling plants.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Accepted Categories ================= -->
+    <section class="section section-alt" id="categories">
+      <div class="container">
+        <div class="section-header">
+          <span class="badge badge-primary">Recycling Scope</span>
+          <h2>What Items Can You Recycle?</h2>
+          <p>We accept almost all electronic, electrical, and computer hardware for scientific material reclamation.</p>
+        </div>
+
+        <div class="categories-grid">
+          <div class="category-card">
+            <div class="category-icon">📱</div>
+            <h3>Smartphones & Tablets</h3>
+            <p>Old iPhones, Android phones, tablets, smartwatches, and loose phone batteries.</p>
+            <div class="category-meta">Precious metals reclamation: Gold & Copper</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon">💻</div>
+            <h3>Laptops & Computers</h3>
+            <p>Faulty laptops, desktops, motherboards, RAM, hard drives, and graphics cards.</p>
+            <div class="category-meta">Includes DoD compliant data sanitization</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon">🔋</div>
+            <h3>Batteries & Power Units</h3>
+            <p>Lithium-ion packs, UPS backup units, power banks, and lead-acid batteries.</p>
+            <div class="category-meta">Hazardous chemical neutralization</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon">🔌</div>
+            <h3>Cables, Adapters & Peripherals</h3>
+            <p>Charging cords, HDMI cables, wireless keyboards, mice, and power bricks.</p>
+            <div class="category-meta">High-grade plastic & copper recovery</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon">📺</div>
+            <h3>Home Electronics</h3>
+            <p>Monitors, TVs, microwaves, printers, audio systems, and smart home gadgets.</p>
+            <div class="category-meta">Safe glass and cathode ray treatment</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon">⚙️</div>
+            <h3>Industrial & Components</h3>
+            <p>Server racks, telecom units, PCB scrap, routers, and commercial IT infrastructure.</p>
+            <div class="category-meta">Bulk collection & corporate ESG compliance</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= WhatsApp Bot Interactive Showcase ================= -->
+    <section class="section" id="whatsapp-demo">
+      <div class="container">
+        <div class="panel" style="background: radial-gradient(circle at bottom right, #f0fdf4, #ffffff); border-color: var(--primary-border);">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;">
+            <div>
+              <span class="badge badge-primary">WhatsApp Powered</span>
+              <h2 style="font-size: 2.2rem; font-weight: 800; margin-top: 0.5rem; margin-bottom: 1rem; color: var(--slate-900);">
+                Manage Pickups From the App You Already Use Every Day
+              </h2>
+              <p style="color: var(--slate-600); margin-bottom: 1.5rem; font-size: 1.05rem;">
+                No passwords to remember each time. The bot validates your registration, blocks spammers with advanced anti-flood rules, and immediately saves your pickup confirmation code into your live portal dashboard.
+              </p>
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;">
+                <li style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="color: var(--primary); font-weight: bold;">✔</span>
+                  <strong>BOOK:</strong> Start a step-by-step pickup request
+                </li>
+                <li style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="color: var(--primary); font-weight: bold;">✔</span>
+                  <strong>STATUS:</strong> View real-time status of your last 3 pickups
+                </li>
+                <li style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="color: var(--primary); font-weight: bold;">✔</span>
+                  <strong>CANCEL:</strong> Abort booking process anytime
+                </li>
+              </ul>
+              <a href="/register.html" class="btn btn-primary">
+                Get Started Now
+              </a>
+            </div>
+
+            <div style="background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-md);">
+              <h4 style="color: var(--slate-800); margin-bottom: 0.75rem; font-size: 1rem;">Available WhatsApp Commands</h4>
+              <div style="background: var(--slate-900); color: #a7f3d0; padding: 1rem; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.8;">
+                # Book an e-waste collection<br>
+                &gt; BOOK<br><br>
+                # Check your existing booking status<br>
+                &gt; STATUS<br><br>
+                # Reset conversation memory<br>
+                &gt; CANCEL<br><br>
+                # View full menu and guidelines<br>
+                &gt; HELP
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Call To Action Banner ================= -->
+    <section class="section" style="background: linear-gradient(135deg, var(--slate-900), #064e3b); color: white; text-align: center;">
+      <div class="container">
+        <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;">Ready To Clear Your E-Waste Responsibly?</h2>
+        <p style="color: var(--slate-300); max-width: 600px; margin: 0 auto 2rem; font-size: 1.1rem;">
+          Join thousands of eco-conscious citizens and enterprises making our planet cleaner, one gadget at a time.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="/register.html" class="btn btn-primary" style="background-color: var(--primary-light); color: var(--slate-900);">
+            🚀 Register Pickup Account
+          </a>
+          <a href="/qr.html" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.3);">
+            📱 WhatsApp Bot Status
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= Footer ================= -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>♻️ EcoVolt Smart E-Waste</h3>
+          <p>
+            Autonomous green logistics platform bridging web portals with conversational WhatsApp assistants. Certified safe electronics recycling.
+          </p>
+          <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--primary-light);">
+            CPCB Registration: EW/REG/2026/8942
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <h4>Portal Links</h4>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/register.html">Register Account</a></li>
+            <li><a href="/login.html">Client Login</a></li>
+            <li><a href="/dashboard.html">Pickup Dashboard</a></li>
+            <li><a href="/qr.html">Bot Connection</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="#categories">Laptops & PCs</a></li>
+            <li><a href="#categories">Smartphones</a></li>
+            <li><a href="#categories">Batteries & UPS</a></li>
+            <li><a href="#categories">Home Appliances</a></li>
+            <li><a href="#categories">Circuit Boards</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h4>Contact & Support</h4>
+          <ul>
+            <li>📍 42 Tech Park Blvd, Eco Corridor</li>
+            <li>📧 contact@ecovolt-ewaste.org</li>
+            <li>📞 Toll Free: 1800-ECO-WASTE</li>
+            <li>⏰ Mon - Sat: 8:00 AM - 7:00 PM</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 EcoVolt™ Smart E-Waste Management Portal. All rights reserved.</div>
+        <div style="display: flex; gap: 1.5rem;">
+          <a href="#" style="color: var(--slate-400); text-decoration: none;">Privacy Policy</a>
+          <a href="#" style="color: var(--slate-400); text-decoration: none;">Terms of Service</a>
+          <a href="#" style="color: var(--slate-400); text-decoration: none;">E-Waste Compliance</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="/app.js"></script>
+  <script>
+    // Handle post-registration welcome banner
+    document.addEventListener("DOMContentLoaded", () => {
+      const isRegistered = getUrlParam("registered");
+      const userName = getUrlParam("name") || getUserName();
+
+      if (isRegistered === "true" || isRegistered === "1") {
+        const banner = document.getElementById("celebrateContainer");
+        const title = document.getElementById("celebrateTitle");
+        if (banner) {
+          banner.style.display = "block";
+          if (title && userName && userName !== "User") {
+            title.textContent = `🎉 Welcome to EcoVolt, ${escapeHtml(userName)}!`;
+          }
+          // Scroll to banner smoothly
+          banner.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    });
+
+    function dismissCelebrate() {
+      const banner = document.getElementById("celebrateContainer");
+      if (banner) {
+        banner.style.display = "none";
+      }
+      // Remove the query param from URL cleanly without page reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  </script>
 </body>
 </html>

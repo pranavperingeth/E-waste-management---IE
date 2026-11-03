@@ -3,75 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — E-Waste Portal</title>
+  <title>Client Dashboard — EcoVolt™ Smart E-Waste Portal</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <h1>♻️ E-Waste Portal</h1>
-    <div>
-      <a href="/">Home</a>
-      <a href="#" onclick="logout()">Logout</a>
+
+  <!-- Navigation -->
+  <header>
+    <nav class="navbar">
+      <a href="/" class="brand">
+        <div class="brand-icon">♻️</div>
+        <span>EcoVolt<span style="color: var(--primary);">.</span></span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="/" class="btn btn-outline btn-sm">Home</a>
+        <button onclick="logout()" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: var(--danger-border);">Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Dashboard Container -->
+  <main class="container dashboard-container">
+    <div class="dashboard-header">
+      <div class="dashboard-title">
+        <h1>Welcome, <span id="userName" style="color: var(--primary);">...</span> 👋</h1>
+        <p id="userPhone" style="margin-top: 0.25rem; font-weight: 500;"></p>
+      </div>
+      <div>
+        <a href="https://web.whatsapp.com" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp">
+          💬 Open WhatsApp Chatbot
+        </a>
+      </div>
     </div>
-  </nav>
 
-  <!-- Dashboard content -->
-  <div class="card wide">
-    <h2>Welcome, <span id="userName">...</span></h2>
-    <p id="userPhone"></p>
+    <!-- Quick Stats Cards -->
+    <div class="dashboard-stats">
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-green">📦</div>
+        <div class="dash-stat-info">
+          <h4>Total Pickups</h4>
+          <span id="statTotal">0</span>
+        </div>
+      </div>
 
-    <!-- WhatsApp bot instructions -->
-    <div class="info-box">
-      <strong>📱 To book a pickup:</strong> Message our WhatsApp bot and type
-      <strong>BOOK</strong>. The bot will guide you through choosing your
-      e-waste category, quantity, address, and pickup date.
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-orange">⏳</div>
+        <div class="dash-stat-info">
+          <h4>Pending Collections</h4>
+          <span id="statPending">0</span>
+        </div>
+      </div>
+
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon icon-blue">🌿</div>
+        <div class="dash-stat-info">
+          <h4>Completed & Recycled</h4>
+          <span id="statCompleted">0</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Bookings table -->
-    <h3 style="margin-bottom: 0.5rem;">Your Bookings</h3>
-    <div id="bookingsMsg"></div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Ref</th>
-            <th>Category</th>
-            <th>Qty</th>
-            <th>Pickup Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="bookingsBody">
-          <!-- Filled by JS -->
-        </tbody>
-      </table>
+    <!-- Bot Instruction Banner -->
+    <div class="panel" style="background: linear-gradient(135deg, #f0fdf4, #ffffff); border-color: var(--primary-border);">
+      <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;">
+        <div style="font-size: 2.2rem;">📱</div>
+        <div style="flex-grow: 1;">
+          <h3 style="color: var(--slate-900); font-size: 1.15rem; margin-bottom: 0.35rem;">
+            Ready to schedule or reschedule an e-waste collection?
+          </h3>
+          <p style="color: var(--slate-600); font-size: 0.95rem;">
+            Open WhatsApp from your phone or desktop, and text <strong>BOOK</strong> to our recycling bot.
+            The bot will guide you through category selection, pickup address, and preferred time window.
+          </p>
+        </div>
+        <div>
+          <a href="/#whatsapp-demo" class="btn btn-outline btn-sm">View Command List</a>
+        </div>
+      </div>
     </div>
-    <p id="noBookings" style="display:none; color: var(--text-light); margin-top: 1rem;">
-      No bookings yet. Message the WhatsApp bot and type <strong>BOOK</strong> to get started!
-    </p>
-  </div>
 
-  <div class="footer">
-    Smart E-Waste Management Portal &mdash; Prototype
-  </div>
+    <!-- Bookings Table Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Your E-Waste Bookings</h2>
+        <span class="badge badge-primary">Real-Time Sync</span>
+      </div>
+
+      <div id="bookingsMsg"></div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Reference ID</th>
+              <th>Category</th>
+              <th>Quantity</th>
+              <th>Pickup Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsBody">
+            <!-- Dynamically populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="noBookings" style="display: none; text-align: center; padding: 3rem 1rem;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">📦</div>
+        <h3 style="color: var(--slate-800); margin-bottom: 0.5rem;">No pickups booked yet</h3>
+        <p style="color: var(--slate-500); max-width: 450px; margin: 0 auto 1.5rem; font-size: 0.95rem;">
+          Your booking history is empty. Text <strong>BOOK</strong> on WhatsApp to arrange your first pickup!
+        </p>
+        <a href="https://web.whatsapp.com" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-sm">
+          💬 Send "BOOK" on WhatsApp
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" style="padding: 2rem 0; margin-top: auto;">
+    <div class="container" style="text-align: center; font-size: 0.85rem; color: var(--slate-500);">
+      &copy; 2026 EcoVolt™ Smart E-Waste Management Portal. Certified E-Waste Handler.
+    </div>
+  </footer>
 
   <script src="/app.js"></script>
   <script>
-    // ---------------------------------------------------------------
-    // Dashboard page logic:
-    //   1. Auth guard — redirect to login if no JWT in localStorage.
-    //   2. Fetch GET /api/me to display the user's name and phone.
-    //   3. Fetch GET /api/my-bookings to populate the bookings table.
-    //      Each row shows: reference code, category, quantity,
-    //      pickup date, and a colored status badge.
-    //   4. If the token is invalid/expired (401), clear it and
-    //      redirect to login.
-    // ---------------------------------------------------------------
-
-    // Auth guard — redirect if not logged in
     if (!requireAuth()) {
-      // requireAuth() already redirects, but stop script execution
+      // requireAuth redirects automatically
     } else {
       loadDashboard();
     }
@@ -81,34 +141,47 @@
         // Fetch user profile
         const user = await apiFetch("/me");
         document.getElementById("userName").textContent = user.full_name;
-        document.getElementById("userPhone").textContent =
-          "WhatsApp: +" + user.whatsapp_number;
+        setUserName(user.full_name);
+        document.getElementById("userPhone").textContent = "WhatsApp ID: +" + user.whatsapp_number;
 
-        // Fetch bookings
+        // Fetch user bookings
         const bookings = await apiFetch("/my-bookings");
         const tbody = document.getElementById("bookingsBody");
         const noBookings = document.getElementById("noBookings");
+
+        // Update stats
+        document.getElementById("statTotal").textContent = bookings.length;
+        const pendingCount = bookings.filter(b => b.status === "PENDING" || b.status === "CONFIRMED").length;
+        const completedCount = bookings.filter(b => b.status === "PICKED_UP").length;
+        document.getElementById("statPending").textContent = pendingCount;
+        document.getElementById("statCompleted").textContent = completedCount;
 
         if (bookings.length === 0) {
           noBookings.style.display = "block";
         } else {
           noBookings.style.display = "none";
           tbody.innerHTML = bookings
-            .map(
-              (b) => `
-            <tr>
-              <td><strong>${escapeHtml(b.booking_ref)}</strong></td>
-              <td>${escapeHtml(b.item_category)}</td>
-              <td>${b.quantity}</td>
-              <td>${new Date(b.pickup_date).toLocaleDateString("en-IN")}</td>
-              <td><span class="status status-${b.status.toLowerCase()}">${escapeHtml(b.status)}</span></td>
-            </tr>
-          `
-            )
+            .map((b) => {
+              const statusClass = `status-${(b.status || "pending").toLowerCase()}`;
+              const formattedDate = new Date(b.pickup_date).toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              });
+
+              return `
+                <tr>
+                  <td><strong style="color: var(--slate-900); font-family: var(--font-mono);">${escapeHtml(b.booking_ref)}</strong></td>
+                  <td>${escapeHtml(b.item_category)}</td>
+                  <td>${b.quantity} item${b.quantity > 1 ? "s" : ""}</td>
+                  <td>${formattedDate}</td>
+                  <td><span class="status-badge ${statusClass}">${escapeHtml(b.status)}</span></td>
+                </tr>
+              `;
+            })
             .join("");
         }
       } catch (err) {
-        // If 401, token is invalid — redirect to login
         if (err.message.includes("401") || err.message.includes("token")) {
           clearToken();
           window.location.href = "/login.html";

@@ -2,24 +2,17 @@
 // ---------------------------------------------------------------
 // Shared helper functions for all frontend pages.
 //
-// This file handles:
-//   - API calls with automatic token attachment (apiFetch)
-//   - Token storage/retrieval in localStorage
-//   - Auth guard (redirect to login if no token)
-//   - Displaying success/error messages
-//   - Logout
-//
-// Every HTML page includes this script. Page-specific logic is
-// written inline in each HTML file using these helpers.
+// Features:
+//   - Token & user profile storage/retrieval in localStorage
+//   - Authenticated API fetch wrapper (apiFetch)
+//   - Route auth guard (requireAuth)
+//   - Responsive Navbar user state detection
+//   - Safe DOM manipulation & alert handling
 // ---------------------------------------------------------------
 
 const API_BASE = "/api";
 
-// --- Token management ---
-// The JWT is stored in localStorage under the key "token".
-// This is acceptable for a prototype; production apps might use
-// httpOnly cookies for better XSS protection.
-
+// --- Token & User Management ---
 function getToken() {
   return localStorage.getItem("token");
 }
@@ -30,11 +23,18 @@ function setToken(token) {
 
 function clearToken() {
   localStorage.removeItem("token");
+  localStorage.removeItem("user_name");
 }
 
-// --- Auth guard ---
-// Call this at the top of any page that requires login.
-// Redirects to login.html if no token is found.
+function getUserName() {
+  return localStorage.getItem("user_name") || "User";
+}
+
+function setUserName(name) {
+  localStorage.setItem("user_name", name);
+}
+
+// --- Auth Guard ---
 function requireAuth() {
   if (!getToken()) {
     window.location.href = "/login.html";
@@ -43,10 +43,7 @@ function requireAuth() {
   return true;
 }
 
-// --- API fetch wrapper ---
-// Automatically attaches the Bearer token if one exists.
-// Returns the parsed JSON response. Throws on non-ok responses
-// so callers can catch and display the error message.
+// --- API Fetch Wrapper ---
 async function apiFetch(endpoint, options = {}) {
   const token = getToken();
   const headers = {
@@ -72,12 +69,39 @@ async function apiFetch(endpoint, options = {}) {
   return data;
 }
 
-// --- Message display helpers ---
-// Shows a success or error alert inside a container element.
+// --- Dynamic Navbar State ---
+function initNavbar() {
+  const navActions = document.getElementById("navActions");
+  if (!navActions) return;
+
+  const token = getToken();
+  const userName = getUserName();
+
+  if (token) {
+    navActions.innerHTML = `
+      <a href="/dashboard.html" class="btn btn-outline btn-sm">📋 My Dashboard</a>
+      <button onclick="logout()" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: var(--danger-border);">Logout</button>
+    `;
+  } else {
+    navActions.innerHTML = `
+      <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+      <a href="/register.html" class="btn btn-primary btn-sm">Get Started</a>
+    `;
+  }
+}
+
+// --- URL Parameter Helper ---
+function getUrlParam(param) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(param);
+}
+
+// --- Alerts & Notification Display ---
 function showMessage(containerId, message, type = "error") {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = `<div class="alert alert-${type}">${escapeHtml(message)}</div>`;
+  const alertClass = type === "success" ? "alert-success" : "alert-error";
+  container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
 }
 
 function clearMessage(containerId) {
@@ -85,16 +109,21 @@ function clearMessage(containerId) {
   if (container) container.innerHTML = "";
 }
 
-// --- XSS prevention ---
-// Simple HTML escaping for user-generated content rendered in the DOM.
+// --- XSS Escaping ---
 function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
   const div = document.createElement("div");
-  div.textContent = str;
+  div.textContent = String(str);
   return div.innerHTML;
 }
 
 // --- Logout ---
 function logout() {
   clearToken();
-  window.location.href = "/login.html";
+  window.location.href = "/";
 }
+
+// Auto-run navbar state check on page load
+document.addEventListener("DOMContentLoaded", () => {
+  initNavbar();
+});
