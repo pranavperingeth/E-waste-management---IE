@@ -30,6 +30,7 @@ const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const meRoutes = require("./routes/me");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 3000;
@@ -57,6 +58,7 @@ app.use(express.static(path.join(__dirname, "frontend")));
 // --- API routes ---
 app.use("/api", authRoutes);
 app.use("/api", meRoutes);
+app.use("/api/admin", adminRoutes);
 
 // --- Health check ---
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
