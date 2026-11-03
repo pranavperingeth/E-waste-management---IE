@@ -19,7 +19,7 @@ services:
       - redis_data:/data
 
   evolution-api:
-    image: evoapicloud/evolution-api:v2.1.1
+    image: evoapicloud/evolution-api:latest
     restart: unless-stopped
     depends_on: [postgres, redis]
     ports:

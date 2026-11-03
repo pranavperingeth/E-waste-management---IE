@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect WhatsApp Bot - E-Waste Portal</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .qr-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .qr-box {
+      width: 280px;
+      height: 280px;
+      margin: 0 auto;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fafafa;
+      position: relative;
+    }
+    .qr-box img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 4px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .status-connecting {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    .status-open {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status-close {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .instructions {
+      text-align: left;
+      background: #f1f8e9;
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-top: 20px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .instructions ol {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">♻️ E-Waste Bot WhatsApp Linker</div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="register.html">Register</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card" style="max-width: 520px;">
+      <h2 style="text-align: center; margin-bottom: 10px;">Link WhatsApp Bot</h2>
+      <p style="text-align: center; color: var(--text-light); font-size: 14px; margin-bottom: 16px;">
+        Scan this QR code with WhatsApp on the <strong>bot's dedicated phone</strong>
+      </p>
+
+      <div style="text-align: center;">
+        <span id="connection-status" class="status-badge status-connecting">Checking connection...</span>
+      </div>
+
+      <div class="qr-container">
+        <div id="qr-box" class="qr-box">
+          <span style="color: #888;">Generating QR code...</span>
+        </div>
+      </div>
+
+      <p id="timer" style="text-align: center; font-size: 13px; color: var(--text-light);">
+        Auto-refreshes every 8 seconds
+      </p>
+
+      <div class="instructions">
+        <strong>📱 How to scan:</strong>
+        <ol>
+          <li>Open WhatsApp on your <strong>bot's phone / spare SIM</strong>.</li>
+          <li>Tap <strong>Settings</strong> (or three dots ⋮) &rarr; <strong>Linked Devices</strong>.</li>
+          <li>Tap <strong>Link a Device</strong>.</li>
+          <li>Point your phone camera at the QR code above.</li>
+        </ol>
+      </div>
+
+      <div id="success-banner" style="display: none; margin-top: 16px; padding: 14px; background: #e8f5e9; border: 1px solid #81c784; border-radius: 6px; text-align: center; color: #2e7d32; font-weight: 600;">
+        🎉 WhatsApp Bot Connected Successfully! You can now register on the portal and test chatting with the bot.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = "change_me_long_random_uuid";
+    const EVOLUTION_URL = "http://localhost:8080";
+    const statusBadge = document.getElementById("connection-status");
+    const qrBox = document.getElementById("qr-box");
+    const successBanner = document.getElementById("success-banner");
+    let isConnected = false;
+
+    async function checkStatusAndQR() {
+      if (isConnected) return;
+
+      try {
+        // 1. Check instance connection status
+        const stateRes = await fetch(`${EVOLUTION_URL}/instance/connectionState/ewaste-bot`, {
+          headers: { "apikey": API_KEY }
+        });
+        const stateData = await stateRes.json();
+        const state = stateData?.instance?.state;
+
+        if (state === "open") {
+          isConnected = true;
+          statusBadge.textContent = "CONNECTED (open)";
+          statusBadge.className = "status-badge status-open";
+          qrBox.innerHTML = '<div style="color: #2e7d32; font-size: 48px;">✅</div><p style="margin-top: 8px; color: #2e7d32; font-weight: bold;">WhatsApp Connected!</p>';
+          successBanner.style.display = "block";
+          return;
+        }
+
+        // 2. Fetch QR code
+        const connectRes = await fetch(`${EVOLUTION_URL}/instance/connect/ewaste-bot`, {
+          headers: { "apikey": API_KEY }
+        });
+        const connectData = await connectRes.json();
+
+        if (connectData.base64) {
+          statusBadge.textContent = "Ready to Scan";
+          statusBadge.className = "status-badge status-connecting";
+          qrBox.innerHTML = `<img src="${connectData.base64}" alt="WhatsApp QR Code" />`;
+        } else if (connectData.count === 0) {
+          statusBadge.textContent = "Connecting to WhatsApp servers...";
+          statusBadge.className = "status-badge status-connecting";
+        }
+      } catch (err) {
+        statusBadge.textContent = "Offline / Error";
+        statusBadge.className = "status-badge status-close";
+        qrBox.innerHTML = '<span style="color: red; font-size: 13px;">Error fetching QR. Ensure Evolution API is running.</span>';
+      }
+    }
+
+    // Initial check
+    checkStatusAndQR();
+
+    // Auto-refresh every 8s
+    setInterval(checkStatusAndQR, 8000);
+  </script>
+</body>
+</html>
