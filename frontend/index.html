@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EcoVolt™ — Smart E-Waste Management & Green Logistics</title>
+  <title>Rewire™ — Smart E-Waste Management & Green Logistics</title>
   <meta name="description" content="Certified, safe doorstep e-waste recycling powered by automated WhatsApp scheduling. Zero landfill guarantee." />
   <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" type="image/png" href="/logo.png" />
 </head>
 <body>
 
@@ -13,8 +14,8 @@
   <header>
     <nav class="navbar">
       <a href="/" class="brand">
-        <div class="brand-icon">♻️</div>
-        <span>EcoVolt<span style="color: var(--primary);">.</span></span>
+        <img src="/logo.png" alt="Rewire Logo" class="brand-img" width="38" height="38" />
+        <span>Rewire<span style="color: var(--primary);">.</span></span>
       </a>
 
       <ul class="nav-menu">
@@ -38,7 +39,7 @@
       <div class="celebrate-banner">
         <div class="celebrate-icon">🎉</div>
         <div class="celebrate-body">
-          <h2 id="celebrateTitle">Welcome to EcoVolt, Explorer!</h2>
+          <h2 id="celebrateTitle">Welcome to Rewire, Explorer!</h2>
           <p id="celebrateDesc">
             Your registration is confirmed! We have dispatched a <strong>WhatsApp welcome message</strong> to your registered number.
             Simply check your phone and reply <strong>BOOK</strong> to schedule your doorstep e-waste pickup anytime.
@@ -104,13 +105,13 @@
               <div class="phone-header">
                 <div class="phone-avatar">🤖</div>
                 <div>
-                  <div style="font-weight: 700; font-size: 0.95rem;">EcoVolt Assistant</div>
+                  <div style="font-weight: 700; font-size: 0.95rem;">Rewire Assistant</div>
                   <div style="font-size: 0.75rem; opacity: 0.85;">Online • Official Verified Bot</div>
                 </div>
               </div>
               <div class="phone-chat">
                 <div class="chat-bubble bubble-bot">
-                  👋 <strong>Hello! Welcome to EcoVolt E-Waste.</strong><br>
+                  👋 <strong>Hello! Welcome to Rewire E-Waste.</strong><br>
                   We ensure your electronics are responsibly recycled.<br><br>
                   Send <strong>BOOK</strong> anytime to arrange a free pickup!
                 </div>
@@ -243,7 +244,7 @@
       <div class="container">
         <div class="section-header">
           <span class="badge badge-primary">Frictionless Process</span>
-          <h2>How EcoVolt Works</h2>
+          <h2>How Rewire Works</h2>
           <p>No clunky mobile apps to install or complex phone queues. Powered by autonomous WhatsApp automation.</p>
         </div>
 
@@ -412,7 +413,7 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <h3>♻️ EcoVolt Smart E-Waste</h3>
+          <h3 style="display:flex;align-items:center;gap:0.6rem;"><img src="/logo.png" alt="Rewire Logo" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" /> Rewire Smart E-Waste</h3>
           <p>
             Autonomous green logistics platform bridging web portals with conversational WhatsApp assistants. Certified safe electronics recycling.
           </p>
@@ -448,7 +449,7 @@
           <h4>Contact & Support</h4>
           <ul>
             <li>📍 42 Tech Park Blvd, Eco Corridor</li>
-            <li>📧 contact@ecovolt-ewaste.org</li>
+            <li>📧 contact@rewire-ewaste.org</li>
             <li>📞 Toll Free: 1800-ECO-WASTE</li>
             <li>⏰ Mon - Sat: 8:00 AM - 7:00 PM</li>
           </ul>
@@ -456,7 +457,7 @@
       </div>
 
       <div class="footer-bottom">
-        <div>&copy; 2026 EcoVolt™ Smart E-Waste Management Portal. All rights reserved.</div>
+        <div>&copy; 2026 Rewire™ Smart E-Waste Management Portal. All rights reserved.</div>
         <div style="display: flex; gap: 1.5rem;">
           <a href="/dashboard.html" style="color: var(--slate-400); text-decoration: none;">Consumer Portal</a>
           <a href="/admin.html" style="color: var(--slate-400); text-decoration: none;">Admin Console</a>
@@ -478,7 +479,7 @@
         if (banner) {
           banner.style.display = "block";
           if (title && userName && userName !== "User") {
-            title.textContent = `🎉 Welcome to EcoVolt, ${escapeHtml(userName)}!`;
+            title.textContent = `🎉 Welcome to Rewire, ${escapeHtml(userName)}!`;
           }
           banner.scrollIntoView({ behavior: "smooth", block: "start" });
         }
