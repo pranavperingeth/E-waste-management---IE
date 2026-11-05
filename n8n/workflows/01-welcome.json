@@ -62,7 +62,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "number": "={{ $json.body.whatsapp_number }}",
-            "text": "=Hi {{ $json.body.full_name }}! 👋 Welcome to the Smart E-Waste Portal.\n\nType *BOOK* to schedule an e-waste pickup\nType *STATUS* to see your bookings\nType *HELP* for all commands"
+            "text": "=Hi {{ $json.body.full_name }}! 👋 Welcome to Rewire.\n\nType *BOOK* to schedule an e-waste pickup\nType *STATUS* to see your bookings\nType *HELP* for all commands"
           },
           "matchingColumns": [],
           "schema": [

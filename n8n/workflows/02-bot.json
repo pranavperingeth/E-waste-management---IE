@@ -34,7 +34,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT r.* FROM (VALUES ($1::varchar)) AS v(whatsapp_number) LEFT JOIN registrations r ON r.whatsapp_number = v.whatsapp_number",
+        "query": "SELECT r.* FROM (VALUES ($1::varchar)) AS v(whatsapp_number) LEFT JOIN registrations r ON (r.whatsapp_number = v.whatsapp_number OR RIGHT(r.whatsapp_number, 10) = RIGHT(v.whatsapp_number, 10)) LIMIT 1",
         "options": {
           "queryReplacement": "={{ $json.from }}"
         }
@@ -1269,13 +1269,7 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Unregistered Handler",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Unregistered Handler": {
@@ -1312,17 +1306,6 @@
         [
           {
             "node": "Log Silent Block",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log Unregistered": {
-      "main": [
-        [
-          {
-            "node": "Reply Unregistered",
             "type": "main",
             "index": 0
           }
